@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -59,34 +59,34 @@ export default function AdminLoginPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#1A0F0A] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#D4A574] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#1A0F0A] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4A574' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative w-full max-w-md">
-        <div className="bg-[#2C1810] border border-[#3D2318] rounded-2xl p-8 shadow-2xl">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#D4A574]/10 border border-[#D4A574]/20 mb-4">
-              <Coffee className="w-7 h-7 text-[#D4A574]" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 mb-4">
+              <Coffee className="w-7 h-7 text-accent" />
             </div>
-            <h1 className="font-serif text-3xl text-[#FAF7F2] mb-1">154 Admin</h1>
-            <p className="text-[#8B7355] text-sm">Breakfast Club Management System</p>
+            <h1 className="font-serif text-3xl text-foreground mb-1">154 Admin</h1>
+            <p className="text-muted-foreground text-sm">Breakfast Club Management System</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#FAF7F2]/80 text-sm">Email address</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@154breakfastclub.in" required className="bg-[#1A0F0A] border-[#3D2318] text-[#FAF7F2] placeholder:text-[#8B7355] focus:border-[#D4A574] focus:ring-[#D4A574]/20" />
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground/80 text-sm">Email address</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@154breakfastclub.in" required className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-accent/20" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[#FAF7F2]/80 text-sm">Password</Label>
+              <Label htmlFor="password" className="text-foreground/80 text-sm">Password</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required className="bg-[#1A0F0A] border-[#3D2318] text-[#FAF7F2] placeholder:text-[#8B7355] focus:border-[#D4A574] focus:ring-[#D4A574]/20 pr-10" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B7355] hover:text-[#D4A574] transition-colors">
+                <Input id="password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required className="bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-accent focus:ring-accent/20 pr-10" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-accent transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -97,12 +97,12 @@ export default function AdminLoginPage() {
                 {error}
               </div>
             )}
-            <Button type="submit" disabled={loading} className="w-full bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] font-semibold py-2.5 rounded-lg transition-colors">
+            <Button type="submit" disabled={loading} className="w-full bg-accent hover:bg-caramel-hover text-accent-foreground font-semibold py-2.5 rounded-lg transition-colors">
               {loading ? 'Signing in...' : 'Sign in to Admin'}
             </Button>
-          <div className="mt-6 pt-6 border-t border-[#3D2318]">
-            <p className="text-center text-[#8B7355] text-xs">Restricted access — 154 Breakfast Club staff only</p>
-          </div>
+            <div className="mt-6 pt-6 border-t border-border">
+              <p className="text-center text-muted-foreground text-xs">Restricted access — 154 Breakfast Club staff only</p>
+            </div>
           </form>
         </div>
       </motion.div>

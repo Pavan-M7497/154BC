@@ -1,19 +1,25 @@
 rules_version = '2';
 
 // ===============================================================
-// Assumed Data Model
+// 154 Breakfast Club — Production Firestore Rules
 // ===============================================================
 //
-// users/{uid} — name, email, role (customer|manager|admin), optional profile fields
-// locations, menuItems, reviews, gallery — public café content
-// settings/{homepage|general} — site CMS
-// reservations/{id} — table bookings (authenticated users)
-// contactMessages/{id} — inbound contact form (staff read, public create)
+// Collections:
+//   users/{uid}            — profile, role, loyalty
+//   loyaltyTransactions/{id} — point earn/redeem/adjust log
+//   orders/{id}            — customer purchase history
+//   locations, menuItems, reviews, gallery — public café content
+//   settings/{homepage|general} — site CMS
+//   reservations/{id}      — table bookings
+//   contactMessages/{id}   — inbound contact form
 //
+// Roles: customer | manager | admin
 // ===============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ─── Helper Functions ──────────────────────────────────────
 
     function isAuthenticated() {
       return request.auth != null;
@@ -47,6 +53,8 @@ service cloud.firestore {
       return role in ['customer', 'manager', 'admin'];
     }
 
+    // ─── Users ─────────────────────────────────────────────────
+
     function isValidUserCreate() {
       let data = request.resource.data;
       return data.keys().hasAll(['name', 'email', 'role', 'createdAt'])
@@ -54,51 +62,99 @@ service cloud.firestore {
         && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
         && data.role == 'customer'
         && (!('favoriteItems' in data) || data.favoriteItems is list)
-        && (!('loyaltyPoints' in data) || data.loyaltyPoints is number)
+        && (!('loyaltyPoints' in data) || (data.loyaltyPoints is number && data.loyaltyPoints >= 0))
+        && (!('totalSpent' in data) || (data.totalSpent is number && data.totalSpent >= 0))
+        && (!('loyaltyTier' in data) || data.loyaltyTier in ['bronze', 'silver', 'gold'])
+        && (!('totalOrders' in data) || (data.totalOrders is number && data.totalOrders >= 0))
         && (!('phone' in data) || data.phone is string);
     }
 
     function isValidUserSelfUpdate() {
       let data = request.resource.data;
       let prev = resource.data;
+      // Prevent self role-escalation: role must stay the same
       return data.role == prev.role
         && data.email == prev.email
+        // Prevent self-modifying loyalty fields
+        && (!('loyaltyPoints' in data) || data.loyaltyPoints == prev.loyaltyPoints)
+        && (!('totalSpent' in data) || data.totalSpent == prev.totalSpent)
+        && (!('loyaltyTier' in data) || data.loyaltyTier == prev.loyaltyTier)
+        && (!('totalOrders' in data) || data.totalOrders == prev.totalOrders)
         && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
         && isValidRole(data.role)
         && (!('favoriteItems' in data) || data.favoriteItems is list)
-        && (!('loyaltyPoints' in data) || data.loyaltyPoints is number)
         && (!('phone' in data) || data.phone is string);
     }
 
-    function isValidUserAdminUpdate() {
+    function isValidUserStaffUpdate() {
       let data = request.resource.data;
       let prev = resource.data;
-      // Allow updating role, name, or email individually while preserving other fields
-      return (data.keys().hasAny(['role', 'name', 'email']))
-        && (!('role' in data) || isValidRole(data.role))
+      // Staff (manager/admin) can update points, totalSpent, tier, totalOrders, role, favoriteItems
+      return (data.keys().hasAny(['role', 'name', 'email', 'loyaltyPoints', 'totalSpent', 'loyaltyTier', 'totalOrders', 'lastPurchaseAt', 'favoriteItems']))
+        // Only Admins can change user roles
+        && (!('role' in data) || data.role == prev.role || isAdmin())
         && (!('name' in data) || (data.name is string && data.name.size() >= 1))
         && (!('email' in data) || (data.email is string && data.email.size() >= 3))
-        && (!('role' in data) || data.role != prev.role || true) // allow role changes
-        && (!('createdAt' in data) || data.createdAt == prev.createdAt); // preserve createdAt
-    }
-
-    function isValidReservationCreate() {
-      let data = request.resource.data;
-      return isAuthenticated()
-        && data.userId == request.auth.uid
-        && data.locationId is string
-        && data.date is string
-        && data.keys().hasAll(['userId', 'locationId', 'date', 'createdAt']);
+        && (!('loyaltyPoints' in data) || (data.loyaltyPoints is number && data.loyaltyPoints >= 0))
+        && (!('totalSpent' in data) || (data.totalSpent is number && data.totalSpent >= 0))
+        && (!('loyaltyTier' in data) || data.loyaltyTier in ['bronze', 'silver', 'gold'])
+        && (!('totalOrders' in data) || (data.totalOrders is number && data.totalOrders >= 0))
+        && (!('createdAt' in data) || data.createdAt == prev.createdAt);
     }
 
     match /users/{userId} {
       allow get: if isOwner(userId) || isStaff();
-      allow list: if isAdmin();
+      allow list: if isStaff();
       allow create: if isOwner(userId) && isValidUserCreate();
       allow update: if (isOwner(userId) && isValidUserSelfUpdate())
-        || (isAdmin() && isValidUserAdminUpdate());
+        || (isStaff() && isValidUserStaffUpdate());
       allow delete: if isAdmin();
     }
+
+    // ─── Orders ────────────────────────────────────────────────
+
+    function isValidOrderCreate() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['uid', 'customerName', 'customerEmail', 'amount', 'items', 'paymentMethod', 'status', 'locationId', 'createdAt', 'completedAt', 'createdBy'])
+        && data.uid is string
+        && data.customerName is string
+        && data.customerEmail is string
+        && data.amount is number
+        && data.items is list
+        && data.paymentMethod in ['cash', 'card', 'upi']
+        && data.status in ['pending', 'completed', 'cancelled']
+        && data.locationId is string;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isStaff() || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isValidOrderCreate();
+      allow update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    // ─── Loyalty Transactions ──────────────────────────────────
+
+    function isValidLoyaltyCreate() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['uid', 'type', 'pointsEarned', 'createdAt', 'createdBy'])
+        && data.uid is string
+        && data.type in ['earn', 'redeem', 'adjust', 'bonus']
+        && data.pointsEarned is number
+        && (!('pointsRedeemed' in data) || data.pointsRedeemed is number)
+        && (!('amountSpent' in data) || (data.amountSpent is number && data.amountSpent >= 0))
+        && (!('orderId' in data) || data.orderId is string)
+        && (!('note' in data) || (data.note is string && data.note.size() <= 500));
+    }
+
+    match /loyaltyTransactions/{txId} {
+      allow read: if isStaff()
+        || (isAuthenticated() && resource.data.uid == request.auth.uid);
+      allow create: if isStaff() && isValidLoyaltyCreate();
+      allow update, delete: if false; // Immutable audit trail
+    }
+
+    // ─── Public Content Collections ────────────────────────────
 
     match /locations/{docId} {
       allow read: if true;
@@ -120,11 +176,27 @@ service cloud.firestore {
       allow create, update, delete: if isStaff();
     }
 
+    // ─── Settings ──────────────────────────────────────────────
+
     match /settings/{docId} {
       allow read: if true;
       allow create, update: if (docId == 'homepage' && isStaff())
         || (docId == 'general' && isAdmin());
       allow delete: if isAdmin();
+    }
+
+    // ─── Reservations ──────────────────────────────────────────
+
+    function isValidReservationCreate() {
+      let data = request.resource.data;
+      return isAuthenticated()
+        && data.userId == request.auth.uid
+        && data.locationId is string && data.locationId.size() > 0
+        && data.date is string && data.date.size() >= 8
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.email is string && data.email.size() >= 3
+        && data.guests is number && data.guests >= 1 && data.guests <= 20
+        && data.keys().hasAll(['userId', 'locationId', 'date', 'name', 'email', 'guests', 'createdAt']);
     }
 
     match /reservations/{reservationId} {
@@ -134,19 +206,23 @@ service cloud.firestore {
       allow update: if isStaff()
         || (isAuthenticated()
           && resource.data.userId == request.auth.uid
-          && (!('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId)
+          && request.resource.data.userId == resource.data.userId
           && (!('status' in request.resource.data) || request.resource.data.status == 'cancelled'));
       allow delete: if isAdmin();
     }
 
+    // ─── Contact Messages ──────────────────────────────────────
+
     match /contactMessages/{messageId} {
       allow read: if isStaff();
       allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
-        && request.resource.data.name is string
-        && request.resource.data.email is string
-        && request.resource.data.message is string;
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 120
+        && request.resource.data.email is string && request.resource.data.email.size() >= 3
+        && request.resource.data.message is string && request.resource.data.message.size() >= 1 && request.resource.data.message.size() <= 5000;
       allow update, delete: if isAdmin();
     }
+
+    // ─── Catch-all: deny everything else ───────────────────────
 
     match /{document=**} {
       allow read, write: if false;

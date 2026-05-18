@@ -2,6 +2,8 @@ import { doc, getDoc, setDoc, serverTimestamp, type DocumentData } from 'firebas
 import { db } from '@/lib/firebase'
 import { DEFAULT_ROLE, isUserRole, type UserRole } from '@/lib/auth/roles'
 
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold'
+
 export interface UserProfile {
   uid: string
   email: string
@@ -10,6 +12,10 @@ export interface UserProfile {
   role: UserRole
   favoriteItems: string[]
   loyaltyPoints: number
+  totalSpent: number
+  loyaltyTier: LoyaltyTier
+  totalOrders: number
+  lastPurchaseAt: Date | null
   createdAt: Date
 }
 
@@ -19,12 +25,35 @@ export interface UserProfileWrite {
   role: UserRole
   favoriteItems?: string[]
   loyaltyPoints?: number
+  totalSpent?: number
+  loyaltyTier?: LoyaltyTier
+  totalOrders?: number
+  lastPurchaseAt?: ReturnType<typeof serverTimestamp> | null
   phone?: string
   createdAt: ReturnType<typeof serverTimestamp>
 }
 
+/** Derive loyalty tier from loyaltyPoints */
+export function computeTier(points: number): LoyaltyTier {
+  if (points >= 5000) return 'gold'
+  if (points >= 1000) return 'silver'
+  return 'bronze'
+}
+
+/** Points needed for next tier */
+export function nextTierThreshold(tier: LoyaltyTier): number {
+  switch (tier) {
+    case 'bronze': return 1000
+    case 'silver': return 5000
+    case 'gold': return Infinity
+  }
+}
+
 export function parseUserProfile(uid: string, data: DocumentData): UserProfile {
   const role = isUserRole(data.role) ? data.role : DEFAULT_ROLE
+  const points = typeof data.loyaltyPoints === 'number' ? data.loyaltyPoints : 0
+  const totalSpent = typeof data.totalSpent === 'number' ? data.totalSpent : 0
+  const totalOrders = typeof data.totalOrders === 'number' ? data.totalOrders : 0
 
   return {
     uid,
@@ -33,9 +62,17 @@ export function parseUserProfile(uid: string, data: DocumentData): UserProfile {
     phone: typeof data.phone === 'string' ? data.phone : undefined,
     role,
     favoriteItems: Array.isArray(data.favoriteItems) ? data.favoriteItems : [],
-    loyaltyPoints: typeof data.loyaltyPoints === 'number' ? data.loyaltyPoints : 0,
+    loyaltyPoints: points,
+    totalSpent,
+    loyaltyTier: isValidTier(data.loyaltyTier) ? data.loyaltyTier : computeTier(points),
+    totalOrders,
+    lastPurchaseAt: data.lastPurchaseAt?.toDate?.() ?? null,
     createdAt: data.createdAt?.toDate?.() ?? new Date(),
   }
+}
+
+function isValidTier(value: unknown): value is LoyaltyTier {
+  return typeof value === 'string' && ['bronze', 'silver', 'gold'].includes(value)
 }
 
 export function buildDefaultProfile(
@@ -48,7 +85,11 @@ export function buildDefaultProfile(
     email,
     role: DEFAULT_ROLE,
     favoriteItems: [],
-    loyaltyPoints: 100,
+    loyaltyPoints: 0,
+    totalSpent: 0,
+    loyaltyTier: 'bronze',
+    totalOrders: 0,
+    lastPurchaseAt: null,
     createdAt: serverTimestamp(),
   }
 }
@@ -89,6 +130,10 @@ export async function ensureUserProfile(
     role: payload.role,
     favoriteItems: payload.favoriteItems ?? [],
     loyaltyPoints: payload.loyaltyPoints ?? 0,
+    totalSpent: payload.totalSpent ?? 0,
+    loyaltyTier: payload.loyaltyTier ?? 'bronze',
+    totalOrders: payload.totalOrders ?? 0,
+    lastPurchaseAt: null,
     createdAt: new Date(),
   }
 }

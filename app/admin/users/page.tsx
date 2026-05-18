@@ -13,9 +13,9 @@ import { toast } from 'sonner'
 import { useAuth } from '@/components/auth/auth-context'
 
 const roleBadgeClass: Record<UserRole, string> = {
-  customer: 'bg-[#3D2318] text-[#8B7355] border-[#3D2318]',
+  customer: 'bg-card text-muted-foreground border-border',
   manager: 'bg-blue-500/10 text-blue-300 border-blue-500/20',
-  admin: 'bg-[#D4A574]/10 text-[#D4A574] border-[#D4A574]/20',
+  admin: 'bg-accent/10 text-accent border border-accent/20',
 }
 
 export default function AdminUsersPage() {
@@ -25,12 +25,16 @@ export default function AdminUsersPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const unsub = subscribeUsers(
       (list) => {
-        setUsers(list)
-        setLoading(false)
+        if (!cancelled) {
+          setUsers(list)
+          setLoading(false)
+        }
       },
       (error) => {
+        if (cancelled) return
         if (error.code === 'permission-denied') {
           toast.error('Only admins can view and manage team roles.')
         } else {
@@ -39,7 +43,10 @@ export default function AdminUsersPage() {
         setLoading(false)
       }
     )
-    return () => unsub()
+    return () => {
+      cancelled = true
+      unsub()
+    }
   }, [])
 
   const handleRoleChange = async (uid: string, role: UserRole) => {
@@ -67,16 +74,16 @@ export default function AdminUsersPage() {
           description="Assign manager or admin access. New sign-ups remain customers by default."
         />
 
-        <div className="rounded-2xl border border-[#2C1810] bg-[#1A0F0A] overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader2 className="w-6 h-6 text-[#D4A574] animate-spin" />
+              <Loader2 className="w-6 h-6 text-accent animate-spin" />
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#2C1810] text-[#8B7355] text-left">
+                  <tr className="border-b border-border text-muted-foreground text-left">
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Email</th>
                     <th className="px-4 py-3 font-medium">Role</th>
@@ -85,9 +92,9 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody>
                   {users.map((member) => (
-                    <tr key={member.uid} className="border-b border-[#2C1810]/60 last:border-0">
-                      <td className="px-4 py-3 text-[#FAF7F2]">{member.name || '—'}</td>
-                      <td className="px-4 py-3 text-[#8B7355]">{member.email}</td>
+                    <tr key={member.uid} className="border-b border-border/60 last:border-0">
+                      <td className="px-4 py-3 text-foreground">{member.name || '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{member.email}</td>
                       <td className="px-4 py-3">
                         <Badge className={roleBadgeClass[member.role]}>{member.role}</Badge>
                       </td>
@@ -102,8 +109,8 @@ export default function AdminUsersPage() {
                               onClick={() => handleRoleChange(member.uid, role)}
                               className={
                                 member.role === role
-                                  ? 'bg-[#D4A574] text-[#2C1810] hover:bg-[#C4955A]'
-                                  : 'border-[#3D2318] text-[#8B7355] hover:text-[#FAF7F2]'
+                                  ? 'bg-accent text-accent-foreground hover:bg-caramel-hover'
+                                  : 'border-border text-muted-foreground hover:text-foreground'
                               }
                             >
                               {updatingId === member.uid ? (
@@ -123,7 +130,7 @@ export default function AdminUsersPage() {
           )}
         </div>
 
-        <p className="text-[#8B7355] text-xs max-w-2xl">
+        <p className="text-muted-foreground text-xs max-w-2xl">
           Promote trusted staff to manager for menu, gallery, and content access. Admin can manage
           all branches, settings, and team roles. Roles are stored in Firestore and enforced by
           security rules.

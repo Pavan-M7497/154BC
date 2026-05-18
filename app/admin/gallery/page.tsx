@@ -22,19 +22,24 @@ export default function GalleryPage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    let cancelled = false
     const unsub = subscribeGallery(
       (firestoreImages) => {
-        if (firestoreImages.length > 0) {
+        if (!cancelled && firestoreImages.length > 0) {
           setImages(firestoreImages)
         }
       },
       (error) => {
+        if (cancelled) return
         if (error.code === 'permission-denied') {
           toast.error('No permission to load gallery.')
         }
       }
     )
-    return () => unsub()
+    return () => {
+      cancelled = true
+      unsub()
+    }
   }, [])
 
   const handleFiles = async (files: FileList) => {
@@ -60,7 +65,7 @@ export default function GalleryPage() {
       }
       toast.success(`${fileArr.length} image(s) uploaded successfully`)
     } catch (err) {
-      console.error('[v0] Gallery upload error:', err)
+      console.error('[Gallery upload error]:', err)
       toast.error('Upload failed')
     } finally {
       setUploading(false)
@@ -99,7 +104,7 @@ export default function GalleryPage() {
       <div
         className={cn(
           'border-2 border-dashed rounded-2xl transition-all',
-          dragOver ? 'border-[#D4A574] bg-[#D4A574]/5' : 'border-[#2C1810] bg-[#1A0F0A]'
+          dragOver ? 'border-accent bg-accent/5' : 'border-border bg-card'
         )}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
@@ -108,38 +113,38 @@ export default function GalleryPage() {
         <div className="p-8 text-center">
           {uploading ? (
             <div className="space-y-3">
-              <Loader2 size={32} className="text-[#D4A574] animate-spin mx-auto" />
-              <p className="text-[#FAF7F2] text-sm">Uploading...</p>
-              <div className="w-48 h-1.5 bg-[#2C1810] rounded-full overflow-hidden mx-auto">
-                <div className="h-full bg-[#D4A574] rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
+              <Loader2 size={32} className="text-accent animate-spin mx-auto" />
+              <p className="text-foreground text-sm">Uploading...</p>
+              <div className="w-48 h-1.5 bg-background rounded-full overflow-hidden mx-auto">
+                <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
               </div>
-              <p className="text-[#8B7355] text-xs">{uploadProgress}%</p>
+              <p className="text-muted-foreground text-xs">{uploadProgress}%</p>
             </div>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-xl bg-[#2C1810] flex items-center justify-center mx-auto mb-3">
-                <Upload size={20} className="text-[#8B7355]" />
+              <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center mx-auto mb-3">
+                <Upload size={20} className="text-muted-foreground" />
               </div>
-              <p className="text-[#FAF7F2] text-sm mb-1">
-                <span className="text-[#D4A574] cursor-pointer hover:underline" onClick={() => inputRef.current?.click()}>Click to upload</span>
+              <p className="text-foreground text-sm mb-1">
+                <span className="text-accent cursor-pointer hover:underline" onClick={() => inputRef.current?.click()}>Click to upload</span>
                 {' '}or drag & drop images here
               </p>
-              <p className="text-[#8B7355] text-xs mb-4">PNG, JPG, WebP — multiple files supported</p>
+              <p className="text-muted-foreground text-xs mb-4">PNG, JPG, WebP — multiple files supported</p>
 
               <div className="flex items-center justify-center gap-3">
                 <div className="relative">
                   <select
                     value={selectedLocation}
                     onChange={e => setSelectedLocation(e.target.value)}
-                    className="appearance-none text-sm px-4 py-2 pr-8 bg-[#2C1810] border border-[#3D2318] rounded-lg text-[#FAF7F2] focus:outline-none focus:border-[#D4A574]"
+                    className="appearance-none text-sm px-4 py-2 pr-8 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-accent"
                   >
                     {locations.map(loc => (
                       <option key={loc.id} value={loc.id}>{loc.shortName}</option>
                     ))}
                   </select>
-                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8B7355] pointer-events-none" />
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 </div>
-                <Button onClick={() => inputRef.current?.click()} className="bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] font-medium">
+                <Button onClick={() => inputRef.current?.click()} className="bg-accent hover:bg-caramel-hover text-accent-foreground font-medium">
                   <Upload size={14} className="mr-1.5" />
                   Choose Files
                 </Button>
@@ -167,8 +172,8 @@ export default function GalleryPage() {
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
               filterLocation === locId
-                ? 'bg-[#D4A574] text-[#2C1810]'
-                : 'bg-[#1A0F0A] border border-[#2C1810] text-[#8B7355] hover:text-[#FAF7F2] hover:border-[#3D2318]'
+                ? 'bg-accent text-accent-foreground'
+                : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-espresso'
             )}
           >
             {locId === 'all' ? 'All Locations' : getLocationName(locId)}
@@ -181,9 +186,9 @@ export default function GalleryPage() {
 
       {/* Image Grid */}
       {filteredImages.length === 0 ? (
-        <div className="bg-[#1A0F0A] border border-[#2C1810] rounded-2xl p-12 text-center">
-          <Images size={32} className="text-[#5D4E3C] mx-auto mb-3" />
-          <p className="text-[#8B7355] text-sm">No images yet. Upload some above!</p>
+        <div className="bg-card border border-border rounded-2xl p-12 text-center">
+          <Images size={32} className="text-espresso mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">No images yet. Upload some above!</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -193,7 +198,7 @@ export default function GalleryPage() {
               layout
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="group relative aspect-square rounded-xl overflow-hidden bg-[#1A0F0A] border border-[#2C1810]"
+              className="group relative aspect-square rounded-xl overflow-hidden bg-card border border-border"
             >
               <img
                 src={image.src}
@@ -203,7 +208,7 @@ export default function GalleryPage() {
               {/* Overlay */}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
                 <p className="text-white text-xs text-center truncate w-full">{image.alt}</p>
-                <Badge className="bg-[#D4A574]/20 text-[#D4A574] border-[#D4A574]/20 text-xs">
+                <Badge className="bg-accent/20 text-accent border border-accent/20 text-xs">
                   {getLocationName(image.locationId)}
                 </Badge>
                 <button

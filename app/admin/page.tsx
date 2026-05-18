@@ -8,6 +8,7 @@ import {
   query,
   onSnapshot,
   orderBy,
+  limit,
   Timestamp,
   doc,
   updateDoc,
@@ -32,8 +33,8 @@ import {
 } from 'lucide-react'
 import { locations } from '@/lib/data'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface Reservation {
   id: string
@@ -78,13 +79,13 @@ function StatCard({ label, value, icon: Icon, color, sublabel }: {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#1A0F0A] border border-[#2C1810] rounded-2xl p-5"
+      className="bg-background border border-border rounded-2xl p-5"
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[#8B7355] text-sm mb-1">{label}</p>
-          <p className="text-[#FAF7F2] text-3xl font-bold">{value}</p>
-          {sublabel && <p className="text-[#5D4E3C] text-xs mt-1">{sublabel}</p>}
+          <p className="text-muted-foreground text-sm mb-1">{label}</p>
+          <p className="text-foreground text-3xl font-bold">{value}</p>
+          {sublabel && <p className="text-espresso text-xs mt-1">{sublabel}</p>}
         </div>
         <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center', color)}>
           <Icon size={20} />
@@ -102,22 +103,41 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (authLoading || !canAccessDashboard) return
 
-    const q1 = query(collection(db, 'reservations'), orderBy('createdAt', 'desc'))
+    // PERFORMANCE FIX: limit() to prevent unbounded reads
+    const q1 = query(
+      collection(db, 'reservations'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    )
     const unsub1 = onSnapshot(
       q1,
       (snap) => {
         setReservations(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Reservation))
       },
-      (error) => console.error('[admin] reservations listener:', error.code, error.message)
+      (error) => {
+        console.error('[admin] reservations listener:', error.code, error.message)
+        if (error.code === 'permission-denied') {
+          toast.error('Permission denied reading reservations')
+        }
+      }
     )
 
-    const q2 = query(collection(db, 'contactMessages'), orderBy('createdAt', 'desc'))
+    const q2 = query(
+      collection(db, 'contactMessages'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    )
     const unsub2 = onSnapshot(
       q2,
       (snap) => {
         setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ContactMessage))
       },
-      (error) => console.error('[admin] contactMessages listener:', error.code, error.message)
+      (error) => {
+        console.error('[admin] contactMessages listener:', error.code, error.message)
+        if (error.code === 'permission-denied') {
+          toast.error('Permission denied reading messages')
+        }
+      }
     )
 
     return () => {
@@ -138,7 +158,11 @@ export default function AdminDashboard() {
   const updateStatus = async (id: string, status: 'confirmed' | 'cancelled') => {
     try {
       await updateDoc(doc(db, 'reservations', id), { status })
-    } catch { /* ignore */ }
+      toast.success(`Reservation ${status}`)
+    } catch (err) {
+      console.error('[admin] updateStatus error:', err)
+      toast.error('Failed to update reservation')
+    }
   }
 
   const getLocationName = (id: string) => locations.find(l => l.id === id)?.shortName || id
@@ -150,18 +174,18 @@ export default function AdminDashboard() {
     <div className="space-y-8 max-w-7xl">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-[#D4A574] text-sm font-medium mb-1">{greeting}</p>
-        <h1 className="text-[#FAF7F2] text-3xl font-serif">
+        <p className="text-accent text-sm font-medium mb-1">{greeting}</p>
+        <h1 className="text-foreground text-3xl font-serif">
           {userProfile?.name ? `Welcome back, ${userProfile.name.split(' ')[0]}` : 'Dashboard'}
         </h1>
-        <p className="text-[#8B7355] text-sm mt-1">
+        <p className="text-muted-foreground text-sm mt-1">
           {format(today, 'EEEE, MMMM d, yyyy')} — Here&apos;s what&apos;s happening today
         </p>
       </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Today's Reservations" value={todayReservations.length} icon={Calendar} color="bg-[#D4A574]/10 text-[#D4A574]" sublabel={`${totalGuests} guests`} />
+        <StatCard label="Today's Reservations" value={todayReservations.length} icon={Calendar} color="bg-accent/10 text-accent" sublabel={`${totalGuests} guests`} />
         <StatCard label="Pending Approvals" value={pendingReservations.length} icon={AlertCircle} color="bg-yellow-500/10 text-yellow-400" />
         <StatCard label="Unread Messages" value={unreadMessages.length} icon={Mail} color="bg-blue-500/10 text-blue-400" />
         <StatCard label="Total Reservations" value={reservations.length} icon={TrendingUp} color="bg-green-500/10 text-green-400" sublabel="All time" />
@@ -169,9 +193,9 @@ export default function AdminDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Pending Reservations */}
-        <div className="lg:col-span-2 bg-[#1A0F0A] border border-[#2C1810] rounded-2xl p-5">
+        <div className="lg:col-span-2 bg-background border border-border rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[#FAF7F2] font-semibold">Pending Reservations</h2>
+            <h2 className="text-foreground font-semibold">Pending Reservations</h2>
             <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs">
               {pendingReservations.length} pending
             </Badge>
@@ -179,22 +203,22 @@ export default function AdminDashboard() {
 
           {recentReservations.length === 0 ? (
             <div className="text-center py-10">
-              <Calendar className="w-8 h-8 text-[#5D4E3C] mx-auto mb-2" />
-              <p className="text-[#8B7355] text-sm">No pending reservations</p>
+              <Calendar className="w-8 h-8 text-espresso mx-auto mb-2" />
+              <p className="text-muted-foreground text-sm">No pending reservations</p>
             </div>
           ) : (
             <div className="space-y-3">
               {recentReservations.map(r => (
-                <div key={r.id} className="bg-[#2C1810] rounded-xl p-4">
+                <div key={r.id} className="bg-card rounded-xl p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="text-[#FAF7F2] text-sm font-medium">{r.name}</p>
-                        <Badge className="bg-[#3D2318] text-[#8B7355] border-[#3D2318] text-xs shrink-0">
+                        <p className="text-foreground text-sm font-medium">{r.name}</p>
+                        <Badge className="bg-secondary text-muted-foreground border-secondary text-xs shrink-0">
                           {getLocationName(r.locationId)}
                         </Badge>
                       </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#8B7355]">
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar size={11} />
                           {r.date ? format(new Date(r.date), 'MMM d') : '—'}
@@ -234,21 +258,21 @@ export default function AdminDashboard() {
 
         {/* Quick Links */}
         <div className="space-y-3">
-          <h2 className="text-[#FAF7F2] font-semibold">Quick Actions</h2>
+          <h2 className="text-foreground font-semibold">Quick Actions</h2>
           {quickLinks.map(({ href, label, icon: Icon, desc }) => (
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 p-4 bg-[#1A0F0A] border border-[#2C1810] rounded-xl hover:border-[#D4A574]/30 hover:bg-[#2C1810] transition-all group"
+              className="flex items-center gap-3 p-4 bg-background border border-border rounded-xl hover:border-accent/30 hover:bg-card transition-all group"
             >
-              <div className="w-9 h-9 rounded-lg bg-[#D4A574]/10 flex items-center justify-center shrink-0 group-hover:bg-[#D4A574]/20 transition-colors">
-                <Icon size={16} className="text-[#D4A574]" />
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                <Icon size={16} className="text-accent" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[#FAF7F2] text-sm font-medium">{label}</p>
-                <p className="text-[#8B7355] text-xs truncate">{desc}</p>
+                <p className="text-foreground text-sm font-medium">{label}</p>
+                <p className="text-muted-foreground text-xs truncate">{desc}</p>
               </div>
-              <ArrowRight size={14} className="text-[#5D4E3C] group-hover:text-[#D4A574] group-hover:translate-x-0.5 transition-all" />
+              <ArrowRight size={14} className="text-espresso group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
             </Link>
           ))}
         </div>
@@ -256,25 +280,25 @@ export default function AdminDashboard() {
 
       {/* Recent Messages */}
       {unreadMessages.length > 0 && (
-        <div className="bg-[#1A0F0A] border border-[#2C1810] rounded-2xl p-5">
+        <div className="bg-background border border-border rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[#FAF7F2] font-semibold">Unread Messages</h2>
+            <h2 className="text-foreground font-semibold">Unread Messages</h2>
             <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-xs">
               {unreadMessages.length} new
             </Badge>
           </div>
           <div className="space-y-3">
             {unreadMessages.slice(0, 3).map(m => (
-              <div key={m.id} className="flex items-start gap-3 p-3 bg-[#2C1810] rounded-xl">
+              <div key={m.id} className="flex items-start gap-3 p-3 bg-card rounded-xl">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
                   <Mail size={14} className="text-blue-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-[#FAF7F2] text-sm font-medium">{m.name}</p>
-                    <span className="text-[#8B7355] text-xs">{m.email}</span>
+                    <p className="text-foreground text-sm font-medium">{m.name}</p>
+                    <span className="text-muted-foreground text-xs">{m.email}</span>
                   </div>
-                  <p className="text-[#8B7355] text-xs truncate">{m.subject || m.message}</p>
+                  <p className="text-muted-foreground text-xs truncate">{m.subject || m.message}</p>
                 </div>
               </div>
             ))}

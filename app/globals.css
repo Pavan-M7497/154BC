@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
+/* Fix 1: Use :where to ensure dark mode utility classes apply both to root element and nested children */
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   /* Premium Café Palette */
@@ -35,11 +36,13 @@
   --coffee: #2C1810;
   --cream: #FAF7F2;
   --caramel: #D4A574;
+  --caramel-hover: #C4955A;
   --mocha: #8B7355;
   --espresso: #5D4E3C;
   --latte: #A69070;
   --oat-milk: #E8DFD0;
   --foam: #D4C9B8;
+  --admin-deep: #0F0908;
   
   /* Sidebar tokens */
   --sidebar: #FFFFFF;
@@ -85,9 +88,20 @@
   --sidebar-accent-foreground: #FAF7F2;
   --sidebar-border: #3D2318;
   --sidebar-ring: #D4A574;
+
+  /* Fix 2: Redefine brand and café tokens in dark mode to fit the premium dark coffee aesthetic */
+  --coffee: #FAF7F2;
+  --cream: #1A0F0A;
+  --mocha: #D4C9B8;
+  --espresso: #E8DFD0;
+  --latte: #FAF7F2;
+  --oat-milk: #3D2318;
+  --foam: #3D2318;
+  --admin-deep: #050302;
 }
 
-@theme inline {
+/* Fix 3: Remove "inline" keyword to allow Tailwind CSS v4 variables to cascade dynamically for dark mode support */
+@theme {
   --font-sans: var(--font-dm-sans), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), 'Playfair Display', ui-serif, Georgia, serif;
   --font-mono: 'GeistMono', monospace;
@@ -138,11 +152,14 @@
   --color-latte: var(--latte);
   --color-oat-milk: var(--oat-milk);
   --color-foam: var(--foam);
+  --color-caramel-hover: var(--caramel-hover);
+  --color-admin-deep: var(--admin-deep);
 }
 
 @layer base {
+  /* Fix 4: Remove the non-standard non-existent outline-ring/50 class to prevent compiler warning or failure */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;

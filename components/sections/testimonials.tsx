@@ -5,21 +5,50 @@ import { useEffect, useState } from 'react'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { Star, Quote } from 'lucide-react'
 import { getReviews } from '@/lib/firestore'
+import { getSettings } from '@/lib/firestore'
+
+interface ReviewStats {
+  averageRating: string
+  totalCount: string
+}
 
 export function Testimonials() {
   const [displayedReviews, setDisplayedReviews] = useState<any[]>([])
+  const [stats, setStats] = useState<ReviewStats>({ averageRating: '4.9', totalCount: '500+' })
 
   useEffect(() => {
-    const loadReviews = async () => {
+    let cancelled = false
+
+    const loadData = async () => {
       try {
+        // Load reviews
         const allReviews = await getReviews()
+        if (cancelled) return
         const featured = allReviews.filter(r => r.featured).slice(0, 4)
         setDisplayedReviews(featured.length > 0 ? featured : allReviews.slice(0, 4))
+
+        // Compute actual average from loaded reviews
+        if (allReviews.length > 0) {
+          const avg = (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1)
+          setStats(prev => ({ ...prev, averageRating: avg }))
+        }
+
+        // Load dynamic stats from settings
+        const settings = await getSettings()
+        if (cancelled) return
+        if (settings.reviewCount) {
+          setStats(prev => ({ ...prev, totalCount: String(settings.reviewCount) }))
+        }
+        if (settings.averageRating) {
+          setStats(prev => ({ ...prev, averageRating: String(settings.averageRating) }))
+        }
       } catch (error) {
         console.error('Error loading reviews:', error)
       }
     }
-    loadReviews()
+
+    loadData()
+    return () => { cancelled = true }
   }, [])
 
   return (
@@ -89,7 +118,7 @@ export function Testimonials() {
           ))}
         </div>
 
-        {/* Overall Rating */}
+        {/* Overall Rating — now dynamic from Firestore settings */}
         <ScrollReveal className="text-center mt-12">
           <div className="inline-flex items-center gap-6 bg-white rounded-full px-8 py-4 shadow-sm">
             <div className="flex gap-1">
@@ -98,10 +127,10 @@ export function Testimonials() {
               ))}
             </div>
             <span className="text-coffee font-medium">
-              4.9 Average Rating
+              {stats.averageRating} Average Rating
             </span>
             <span className="text-mocha text-sm">
-              Based on 500+ Reviews
+              Based on {stats.totalCount} Reviews
             </span>
           </div>
         </ScrollReveal>

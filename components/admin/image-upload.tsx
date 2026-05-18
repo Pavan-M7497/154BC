@@ -41,7 +41,7 @@ export function ImageUpload({ value, onChange, folder = 'uploads', className, as
       toast.success('Image uploaded successfully')
     } catch (err) {
       toast.error('Upload failed. Please try again.')
-      console.error('[v0] Image upload error:', err)
+      console.error('[ImageUpload] error:', err)
     } finally {
       setUploading(false)
       setProgress(0)
@@ -67,8 +67,8 @@ export function ImageUpload({ value, onChange, folder = 'uploads', className, as
         className={cn(
           'relative rounded-xl border-2 border-dashed transition-colors overflow-hidden',
           aspectClass,
-          dragOver ? 'border-[#D4A574] bg-[#D4A574]/5' : 'border-[#3D2318] bg-[#1A0F0A]',
-          !value && 'cursor-pointer hover:border-[#D4A574]/50 hover:bg-[#2C1810]/50'
+          dragOver ? 'border-accent bg-accent/5' : 'border-border bg-background',
+          !value && 'cursor-pointer hover:border-accent/50 hover:bg-card/50'
         )}
         onClick={() => !value && !uploading && inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -99,21 +99,21 @@ export function ImageUpload({ value, onChange, folder = 'uploads', className, as
           </>
         ) : uploading ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <Loader2 size={24} className="text-[#D4A574] animate-spin" />
-            <p className="text-[#8B7355] text-sm">{Math.round(progress)}%</p>
-            <div className="w-24 h-1 bg-[#3D2318] rounded-full overflow-hidden">
-              <div className="h-full bg-[#D4A574] rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <Loader2 size={24} className="text-accent animate-spin" />
+            <p className="text-muted-foreground text-sm">{Math.round(progress)}%</p>
+            <div className="w-24 h-1 bg-border rounded-full overflow-hidden">
+              <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${progress}%` }} />
             </div>
           </div>
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
-            <div className="w-10 h-10 rounded-xl bg-[#2C1810] flex items-center justify-center">
-              <ImageIcon size={18} className="text-[#8B7355]" />
+            <div className="w-10 h-10 rounded-xl bg-card flex items-center justify-center">
+              <ImageIcon size={18} className="text-muted-foreground" />
             </div>
-            <p className="text-[#8B7355] text-sm text-center">
-              <span className="text-[#D4A574]">Click to upload</span> or drag & drop
+            <p className="text-muted-foreground text-sm text-center">
+              <span className="text-accent">Click to upload</span> or drag & drop
             </p>
-            <p className="text-[#5D4E3C] text-xs text-center">PNG, JPG, WebP up to 10MB</p>
+            <p className="text-espresso text-xs text-center">PNG, JPG, WebP up to 10MB</p>
           </div>
         )}
       </div>
@@ -124,7 +124,7 @@ export function ImageUpload({ value, onChange, folder = 'uploads', className, as
         placeholder="Or paste an image URL..."
         value={value && !value.startsWith('http') ? '' : (value || '')}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full text-xs px-3 py-2 bg-[#1A0F0A] border border-[#3D2318] rounded-lg text-[#8B7355] placeholder:text-[#5D4E3C] focus:outline-none focus:border-[#D4A574]/50"
+        className="w-full text-xs px-3 py-2 bg-background border border-border rounded-lg text-muted-foreground placeholder:text-espresso focus:outline-none focus:border-accent/50"
       />
 
       <input

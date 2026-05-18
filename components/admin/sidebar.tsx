@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ChevronRight,
   Users,
+  ShoppingBag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,7 @@ const navItems: {
   permission: Permission
 }[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true, permission: 'dashboard' },
+  { href: '/admin/orders', label: 'Orders & Loyalty', icon: ShoppingBag, permission: 'dashboard' },
   { href: '/admin/locations', label: 'Locations', icon: MapPin, permission: 'locations' },
   { href: '/admin/menu', label: 'Menu', icon: UtensilsCrossed, permission: 'menu' },
   { href: '/admin/gallery', label: 'Gallery', icon: Images, permission: 'gallery' },
@@ -63,19 +65,19 @@ function NavItem({
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group',
         isActive
-          ? 'bg-[#D4A574]/10 text-[#D4A574] border border-[#D4A574]/20'
-          : 'text-[#8B7355] hover:text-[#FAF7F2] hover:bg-[#2C1810]'
+          ? 'bg-accent/10 text-accent border border-accent/20'
+          : 'text-muted-foreground hover:text-foreground hover:bg-card'
       )}
     >
       <Icon
         className={cn(
           'w-4.5 h-4.5 shrink-0 transition-colors',
-          isActive ? 'text-[#D4A574]' : 'text-[#8B7355] group-hover:text-[#FAF7F2]'
+          isActive ? 'text-accent' : 'text-muted-foreground group-hover:text-foreground'
         )}
         size={18}
       />
       <span>{label}</span>
-      {isActive && <ChevronRight className="w-3 h-3 ml-auto text-[#D4A574]" />}
+      {isActive && <ChevronRight className="w-3 h-3 ml-auto text-accent" />}
     </Link>
   )
 }
@@ -95,20 +97,20 @@ export function AdminSidebar() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-5 border-b border-[#2C1810]">
+      <div className="px-4 py-5 border-b border-border">
         <Link href="/admin" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#D4A574]/10 border border-[#D4A574]/20 flex items-center justify-center">
-            <span className="font-serif text-base text-[#D4A574] font-bold">154</span>
+          <div className="w-9 h-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+            <span className="font-serif text-base text-accent font-bold">154</span>
           </div>
           <div>
-            <p className="text-[#FAF7F2] text-sm font-semibold leading-tight">Admin Panel</p>
-            <p className="text-[#8B7355] text-xs">Breakfast Club</p>
+            <p className="text-foreground text-sm font-semibold leading-tight">Admin Panel</p>
+            <p className="text-muted-foreground text-xs">Breakfast Club</p>
           </div>
         </Link>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="px-3 text-xs font-semibold text-[#5D4E3C] uppercase tracking-wider mb-3">
+        <p className="px-3 text-xs font-semibold text-espresso uppercase tracking-wider mb-3">
           Management
         </p>
         {visibleNavItems.map((item) => (
@@ -120,29 +122,29 @@ export function AdminSidebar() {
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#8B7355] hover:text-[#FAF7F2] hover:bg-[#2C1810] transition-all group"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-card transition-all group"
         >
           <ExternalLink size={18} className="shrink-0" />
           <span>View Website</span>
         </Link>
       </div>
 
-      <div className="px-3 pb-4 border-t border-[#2C1810] pt-3">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#2C1810]">
-          <div className="w-8 h-8 rounded-lg bg-[#D4A574]/20 flex items-center justify-center shrink-0">
-            <span className="text-[#D4A574] text-sm font-semibold">
+      <div className="px-3 pb-4 border-t border-border pt-3">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-card">
+          <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+            <span className="text-accent text-sm font-semibold">
               {(userProfile?.name || user?.email || 'A')[0].toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[#FAF7F2] text-xs font-medium truncate">
+            <p className="text-foreground text-xs font-medium truncate">
               {userProfile?.name || 'Staff'}
             </p>
-            <p className="text-[#8B7355] text-xs truncate">{roleLabel}</p>
+            <p className="text-muted-foreground text-xs truncate">{roleLabel}</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="text-[#8B7355] hover:text-red-400 transition-colors p-1 rounded-lg"
+            className="text-muted-foreground hover:text-red-400 transition-colors p-1 rounded-lg"
             title="Sign out"
           >
             <LogOut size={15} />
@@ -154,13 +156,13 @@ export function AdminSidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex w-60 shrink-0 flex-col bg-[#1A0F0A] border-r border-[#2C1810]">
+      <aside className="hidden md:flex w-60 shrink-0 flex-col bg-background border-r border-border">
         <SidebarContent />
       </aside>
 
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-[#2C1810] rounded-xl flex items-center justify-center text-[#FAF7F2] shadow-lg"
+        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-card rounded-xl flex items-center justify-center text-foreground shadow-lg"
       >
         <Menu size={20} />
       </button>
@@ -180,11 +182,11 @@ export function AdminSidebar() {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-[#1A0F0A] border-r border-[#2C1810] z-50 flex flex-col"
+              className="md:hidden fixed left-0 top-0 bottom-0 w-64 bg-background border-r border-border z-50 flex flex-col"
             >
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="absolute top-4 right-4 text-[#8B7355] hover:text-[#FAF7F2]"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
               >
                 <X size={20} />
               </button>

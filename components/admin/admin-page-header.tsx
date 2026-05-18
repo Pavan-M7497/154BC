@@ -21,20 +21,20 @@ export function AdminPageHeader({ title, description, actionLabel, onAction, cou
     >
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-[#FAF7F2] text-2xl font-serif">{title}</h1>
+          <h1 className="text-foreground text-2xl font-serif">{title}</h1>
           {count !== undefined && (
-            <span className="px-2 py-0.5 bg-[#2C1810] border border-[#3D2318] text-[#8B7355] text-xs rounded-full">
+            <span className="px-2 py-0.5 bg-card border border-border text-muted-foreground text-xs rounded-full">
               {count}
             </span>
           )}
         </div>
-        {description && <p className="text-[#8B7355] text-sm mt-1">{description}</p>}
+        {description && <p className="text-muted-foreground text-sm mt-1">{description}</p>}
       </div>
 
       {actionLabel && onAction && (
         <Button
           onClick={onAction}
-          className="bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] font-medium shrink-0"
+          className="bg-accent hover:bg-caramel-hover text-accent-foreground font-medium shrink-0"
         >
           <Plus size={16} className="mr-1.5" />
           {actionLabel}

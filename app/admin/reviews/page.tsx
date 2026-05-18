@@ -34,7 +34,7 @@ function StarRating({ value, onChange }: { value: number; onChange?: (v: number)
           onClick={() => onChange?.(star)}
           className={onChange ? 'cursor-pointer' : 'cursor-default'}
         >
-          <Star size={16} className={star <= value ? 'fill-[#D4A574] text-[#D4A574]' : 'text-[#3D2318]'} />
+          <Star size={16} className={star <= value ? 'fill-accent text-accent' : 'text-border'} />
         </button>
       ))}
     </div>
@@ -50,12 +50,16 @@ export default function ReviewsPage() {
   const [seeded, setSeeded] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const unsub = subscribeReviews(
       (firestoreReviews) => {
-        setReviews(firestoreReviews.length > 0 ? firestoreReviews : staticReviews)
-        setSeeded(firestoreReviews.length > 0)
+        if (!cancelled) {
+          setReviews(firestoreReviews.length > 0 ? firestoreReviews : staticReviews)
+          setSeeded(firestoreReviews.length > 0)
+        }
       },
       (error) => {
+        if (cancelled) return
         if (error.code === 'permission-denied') {
           toast.error('No permission to load reviews. Check your role in Firestore.')
         } else {
@@ -63,7 +67,10 @@ export default function ReviewsPage() {
         }
       }
     )
-    return () => unsub()
+    return () => {
+      cancelled = true
+      unsub()
+    }
   }, [])
 
   const handleSeedReviews = async () => {
@@ -145,12 +152,12 @@ export default function ReviewsPage() {
       />
 
       {!seeded && (
-        <div className="bg-[#1A0F0A] border border-[#D4A574]/20 rounded-xl p-5 flex items-center justify-between gap-4">
+        <div className="bg-card border border-accent/20 rounded-xl p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-[#FAF7F2] text-sm font-medium">Initialize Reviews</p>
-            <p className="text-[#8B7355] text-xs mt-0.5">Seed the {staticReviews.length} default reviews to Firestore</p>
+            <p className="text-foreground text-sm font-medium">Initialize Reviews</p>
+            <p className="text-muted-foreground text-xs mt-0.5">Seed the {staticReviews.length} default reviews to Firestore</p>
           </div>
-          <Button onClick={handleSeedReviews} disabled={saving} className="bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] shrink-0">
+          <Button onClick={handleSeedReviews} disabled={saving} className="bg-accent hover:bg-caramel-hover text-accent-foreground shrink-0">
             {saving ? <Loader2 size={14} className="animate-spin mr-1.5" /> : null}
             Seed Reviews
           </Button>
@@ -166,8 +173,8 @@ export default function ReviewsPage() {
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
               filterLocation === locId
-                ? 'bg-[#D4A574] text-[#2C1810]'
-                : 'bg-[#1A0F0A] border border-[#2C1810] text-[#8B7355] hover:text-[#FAF7F2] hover:border-[#3D2318]'
+                ? 'bg-accent text-accent-foreground'
+                : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:border-espresso'
             )}
           >
             {locId === 'all' ? 'All Locations' : getLocationName(locId)}
@@ -184,43 +191,43 @@ export default function ReviewsPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              'bg-[#1A0F0A] border rounded-2xl p-5 transition-colors',
-              review.hidden ? 'border-[#2C1810] opacity-50' : 'border-[#2C1810]',
-              review.featured && 'border-[#D4A574]/20'
+              'bg-card border rounded-2xl p-5 transition-colors',
+              review.hidden ? 'border-border opacity-50' : 'border-border',
+              review.featured && 'border-accent/20'
             )}
           >
             <div className="flex items-start gap-4">
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-xl bg-[#2C1810] flex items-center justify-center shrink-0">
-                <span className="text-[#D4A574] text-sm font-semibold">{review.author[0]}</span>
+              <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center shrink-0">
+                <span className="text-accent text-sm font-semibold">{review.author[0]}</span>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="text-[#FAF7F2] text-sm font-medium">{review.author}</span>
+                  <span className="text-foreground text-sm font-medium">{review.author}</span>
                   <StarRating value={review.rating} />
-                  <Badge className="bg-[#2C1810] text-[#8B7355] border-[#3D2318] text-xs">{getLocationName(review.locationId)}</Badge>
-                  {review.featured && <Badge className="bg-[#D4A574]/10 text-[#D4A574] border-[#D4A574]/20 text-xs">Featured</Badge>}
-                  {review.hidden && <Badge className="bg-[#3D2318] text-[#8B7355] border-[#3D2318] text-xs">Hidden</Badge>}
+                  <Badge className="bg-background text-muted-foreground border-border text-xs">{getLocationName(review.locationId)}</Badge>
+                  {review.featured && <Badge className="bg-accent/10 text-accent border border-accent/20 text-xs">Featured</Badge>}
+                  {review.hidden && <Badge className="bg-background text-muted-foreground border-border text-xs">Hidden</Badge>}
                 </div>
-                <p className="text-[#8B7355] text-sm leading-relaxed">{review.text}</p>
-                <div className="flex items-center gap-3 mt-2 text-[#5D4E3C] text-xs">
+                <p className="text-muted-foreground text-sm leading-relaxed">{review.text}</p>
+                <div className="flex items-center gap-3 mt-2 text-espresso text-xs">
                   <span>{review.date}</span>
                   {review.source && <span>via {review.source}</span>}
                 </div>
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                <button onClick={() => toggleFeatured(review)} className={cn('p-1.5 rounded-lg transition-colors', review.featured ? 'text-[#D4A574] bg-[#D4A574]/10' : 'text-[#5D4E3C] hover:text-[#D4A574] hover:bg-[#2C1810]')} title="Toggle featured">
-                  <Star size={14} className={review.featured ? 'fill-[#D4A574]' : ''} />
+                <button onClick={() => toggleFeatured(review)} className={cn('p-1.5 rounded-lg transition-colors', review.featured ? 'text-accent bg-accent/10' : 'text-espresso hover:text-accent hover:bg-background')} title="Toggle featured">
+                  <Star size={14} className={review.featured ? 'fill-accent' : ''} />
                 </button>
-                <button onClick={() => toggleHidden(review)} className="text-[#5D4E3C] hover:text-[#8B7355] p-1.5 rounded-lg hover:bg-[#2C1810] transition-colors" title="Toggle visibility">
+                <button onClick={() => toggleHidden(review)} className="text-espresso hover:text-muted-foreground p-1.5 rounded-lg hover:bg-background transition-colors" title="Toggle visibility">
                   {review.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
-                <button onClick={() => setEditing(review)} className="text-[#8B7355] hover:text-[#D4A574] p-1.5 rounded-lg hover:bg-[#2C1810] transition-colors">
+                <button onClick={() => setEditing(review)} className="text-muted-foreground hover:text-accent p-1.5 rounded-lg hover:bg-background transition-colors">
                   <Edit2 size={14} />
                 </button>
-                <button onClick={() => handleDelete(review.id)} disabled={deleting === review.id} className="text-[#8B7355] hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
+                <button onClick={() => handleDelete(review.id)} disabled={deleting === review.id} className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
                   {deleting === review.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                 </button>
               </div>
@@ -229,9 +236,9 @@ export default function ReviewsPage() {
         ))}
 
         {filtered.length === 0 && (
-          <div className="bg-[#1A0F0A] border border-[#2C1810] rounded-2xl p-12 text-center">
-            <Star size={28} className="text-[#5D4E3C] mx-auto mb-2" />
-            <p className="text-[#8B7355] text-sm">No reviews yet</p>
+          <div className="bg-card border border-border rounded-2xl p-12 text-center">
+            <Star size={28} className="text-espresso mx-auto mb-2" />
+            <p className="text-muted-foreground text-sm">No reviews yet</p>
           </div>
         )}
       </div>
@@ -244,76 +251,76 @@ export default function ReviewsPage() {
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-[#1A0F0A] border-l border-[#2C1810] z-50 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-background border-l border-border z-50 overflow-y-auto"
             >
-              <div className="sticky top-0 bg-[#1A0F0A] border-b border-[#2C1810] px-6 py-4 flex items-center justify-between z-10">
-                <h2 className="text-[#FAF7F2] font-serif text-lg">{'id' in editing && editing.id ? 'Edit Review' : 'Add Review'}</h2>
-                <button onClick={() => setEditing(null)} className="text-[#8B7355] hover:text-[#FAF7F2]"><X size={20} /></button>
+              <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-foreground font-serif text-lg">{'id' in editing && editing.id ? 'Edit Review' : 'Add Review'}</h2>
+                <button onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
               </div>
 
               <div className="p-6 space-y-5">
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Customer Name *</Label>
-                  <Input value={editing.author} onChange={e => updateField('author', e.target.value)} placeholder="Priya Sharma" className="bg-[#0F0908] border-[#3D2318] text-[#FAF7F2] focus:border-[#D4A574]" />
+                  <Label className="text-foreground/80 text-sm">Customer Name *</Label>
+                  <Input value={editing.author} onChange={e => updateField('author', e.target.value)} placeholder="Priya Sharma" className="bg-card border-border text-foreground focus:border-accent" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Rating</Label>
+                  <Label className="text-foreground/80 text-sm">Rating</Label>
                   <StarRating value={editing.rating} onChange={v => updateField('rating', v)} />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Review Text *</Label>
+                  <Label className="text-foreground/80 text-sm">Review Text *</Label>
                   <textarea
                     value={editing.text}
                     onChange={e => updateField('text', e.target.value)}
                     placeholder="Write the customer review here..."
                     rows={4}
-                    className="w-full text-sm px-3 py-2.5 bg-[#0F0908] border border-[#3D2318] rounded-lg text-[#FAF7F2] placeholder:text-[#5D4E3C] focus:outline-none focus:border-[#D4A574] resize-none"
+                    className="w-full text-sm px-3 py-2.5 bg-card border border-border rounded-lg text-foreground placeholder:text-espresso focus:outline-none focus:border-accent resize-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[#FAF7F2]/80 text-sm">Location</Label>
+                    <Label className="text-foreground/80 text-sm">Location</Label>
                     <div className="relative">
-                      <select value={editing.locationId} onChange={e => updateField('locationId', e.target.value)} className="w-full appearance-none text-sm px-3 py-2 bg-[#0F0908] border border-[#3D2318] rounded-lg text-[#FAF7F2] focus:outline-none focus:border-[#D4A574]">
+                      <select value={editing.locationId} onChange={e => updateField('locationId', e.target.value)} className="w-full appearance-none text-sm px-3 py-2 bg-card border border-border rounded-lg text-foreground focus:outline-none focus:border-accent">
                         {locations.map(l => <option key={l.id} value={l.id}>{l.shortName}</option>)}
                       </select>
-                      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8B7355] pointer-events-none" />
+                      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[#FAF7F2]/80 text-sm">Source</Label>
+                    <Label className="text-foreground/80 text-sm">Source</Label>
                     <div className="relative">
-                      <select value={editing.source || 'Google'} onChange={e => updateField('source', e.target.value)} className="w-full appearance-none text-sm px-3 py-2 bg-[#0F0908] border border-[#3D2318] rounded-lg text-[#FAF7F2] focus:outline-none focus:border-[#D4A574]">
+                      <select value={editing.source || 'Google'} onChange={e => updateField('source', e.target.value)} className="w-full appearance-none text-sm px-3 py-2 bg-card border border-border rounded-lg text-foreground focus:outline-none focus:border-accent">
                         <option value="Google">Google</option>
                         <option value="Zomato">Zomato</option>
                       </select>
-                      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8B7355] pointer-events-none" />
+                      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Date Label</Label>
-                  <Input value={editing.date} onChange={e => updateField('date', e.target.value)} placeholder="2 weeks ago" className="bg-[#0F0908] border-[#3D2318] text-[#FAF7F2] focus:border-[#D4A574]" />
+                  <Label className="text-foreground/80 text-sm">Date Label</Label>
+                  <Input value={editing.date} onChange={e => updateField('date', e.target.value)} placeholder="2 weeks ago" className="bg-card border-border text-foreground focus:border-accent" />
                 </div>
 
                 <div className="flex gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editing.featured || false} onChange={e => updateField('featured', e.target.checked)} className="w-4 h-4 rounded border-[#3D2318] bg-[#0F0908] accent-[#D4A574]" />
-                    <span className="text-[#FAF7F2]/80 text-sm">Featured</span>
+                    <input type="checkbox" checked={editing.featured || false} onChange={e => updateField('featured', e.checked)} className="w-4 h-4 rounded border-border bg-card accent-accent" />
+                    <span className="text-foreground/80 text-sm">Featured</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editing.hidden || false} onChange={e => updateField('hidden', e.target.checked)} className="w-4 h-4 rounded border-[#3D2318] bg-[#0F0908] accent-[#D4A574]" />
-                    <span className="text-[#FAF7F2]/80 text-sm">Hidden</span>
+                    <input type="checkbox" checked={editing.hidden || false} onChange={e => updateField('hidden', e.checked)} className="w-4 h-4 rounded border-border bg-card accent-accent" />
+                    <span className="text-foreground/80 text-sm">Hidden</span>
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#1A0F0A] py-4 -mx-6 px-6 border-t border-[#2C1810]">
-                  <Button onClick={() => setEditing(null)} variant="outline" className="flex-1 border-[#3D2318] text-[#8B7355] hover:text-[#FAF7F2] hover:bg-[#2C1810]">Cancel</Button>
-                  <Button onClick={handleSave} disabled={saving} className="flex-1 bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] font-medium">
+                <div className="flex gap-3 pt-4 sticky bottom-0 bg-background py-4 -mx-6 px-6 border-t border-border">
+                  <Button onClick={() => setEditing(null)} variant="outline" className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-card">Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving} className="flex-1 bg-accent hover:bg-caramel-hover text-accent-foreground font-medium">
                     {saving ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Save size={14} className="mr-1.5" />}
                     Save Review
                   </Button>

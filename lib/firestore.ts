@@ -9,6 +9,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  limit,
   serverTimestamp,
   type FirestoreError,
   type Query,
@@ -60,7 +61,7 @@ export function subscribeLocations(
   callback: (locations: Location[]) => void,
   onError?: (error: FirestoreError) => void
 ): Unsubscribe {
-  const q = query(collection(db, 'locations'), orderBy('name'))
+  const q = query(collection(db, 'locations'), orderBy('name'), limit(50))
   return subscribeQuery(
     'locations',
     q,
@@ -99,7 +100,7 @@ export function subscribeMenuItems(
   callback: (items: MenuItem[]) => void,
   onError?: (error: FirestoreError) => void
 ): Unsubscribe {
-  const q = query(collection(db, 'menuItems'), orderBy('category'))
+  const q = query(collection(db, 'menuItems'), orderBy('category'), limit(100))
   return subscribeQuery(
     'menuItems',
     q,
@@ -138,7 +139,7 @@ export function subscribeReviews(
   callback: (reviews: Review[]) => void,
   onError?: (error: FirestoreError) => void
 ): Unsubscribe {
-  const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'))
+  const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'), limit(50))
   return subscribeQuery(
     'reviews',
     q,
@@ -219,7 +220,7 @@ export function subscribeGallery(
   callback: (images: GalleryImage[]) => void,
   onError?: (error: FirestoreError) => void
 ): Unsubscribe {
-  const q = query(collection(db, 'gallery'), orderBy('order'))
+  const q = query(collection(db, 'gallery'), orderBy('order'), limit(100))
   return subscribeQuery(
     'gallery',
     q,

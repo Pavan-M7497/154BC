@@ -41,20 +41,25 @@ export default function MenuPage() {
   const [seeded, setSeeded] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const unsub = subscribeMenuItems(
       (firestoreItems) => {
-        if (firestoreItems.length > 0) {
+        if (!cancelled && firestoreItems.length > 0) {
           setItems(firestoreItems)
           setSeeded(true)
         }
       },
       (error) => {
+        if (cancelled) return
         if (error.code === 'permission-denied') {
           toast.error('No permission to load menu. Your account needs manager or admin role.')
         }
       }
     )
-    return () => unsub()
+    return () => {
+      cancelled = true
+      unsub()
+    }
   }, [])
 
   const handleSeedMenu = async () => {
@@ -66,7 +71,7 @@ export default function MenuPage() {
       toast.success('Menu seeded to Firestore!')
       setSeeded(true)
     } catch (err) {
-      console.error('[v0] Seed error:', err)
+      console.error('[Seed menu error]:', err)
       toast.error('Failed to seed menu')
     } finally {
       setSaving(false)
@@ -85,7 +90,7 @@ export default function MenuPage() {
       toast.success('Menu item saved!')
       setEditing(null)
     } catch (err) {
-      console.error('[v0] Save menu item error:', err)
+      console.error('[Save menu item error]:', err)
       toast.error('Failed to save item')
     } finally {
       setSaving(false)
@@ -152,12 +157,12 @@ export default function MenuPage() {
       />
 
       {!seeded && (
-        <div className="bg-[#1A0F0A] border border-[#D4A574]/20 rounded-xl p-5 flex items-center justify-between gap-4">
+        <div className="bg-card border border-accent/20 rounded-xl p-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-[#FAF7F2] text-sm font-medium">Initialize Menu Data</p>
-            <p className="text-[#8B7355] text-xs mt-0.5">Seed the full menu ({staticMenuItems.length} items) to Firestore</p>
+            <p className="text-foreground text-sm font-medium">Initialize Menu Data</p>
+            <p className="text-muted-foreground text-xs mt-0.5">Seed the full menu ({staticMenuItems.length} items) to Firestore</p>
           </div>
-          <Button onClick={handleSeedMenu} disabled={saving} className="bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] shrink-0">
+          <Button onClick={handleSeedMenu} disabled={saving} className="bg-accent hover:bg-caramel-hover text-accent-foreground shrink-0">
             {saving ? <Loader2 size={14} className="animate-spin mr-1.5" /> : null}
             Seed Menu
           </Button>
@@ -167,12 +172,12 @@ export default function MenuPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-48 max-w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B7355]" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search items..."
-            className="pl-8 bg-[#1A0F0A] border-[#2C1810] text-[#FAF7F2] placeholder:text-[#5D4E3C] focus:border-[#D4A574]"
+            className="pl-8 bg-card border-border text-foreground placeholder:text-espresso focus:border-accent"
           />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -183,8 +188,8 @@ export default function MenuPage() {
               className={cn(
                 'px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors',
                 filterCategory === cat
-                  ? 'bg-[#D4A574] text-[#2C1810]'
-                  : 'bg-[#1A0F0A] border border-[#2C1810] text-[#8B7355] hover:text-[#FAF7F2] hover:border-[#3D2318]'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-espresso'
               )}
             >
               {cat}
@@ -194,62 +199,62 @@ export default function MenuPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-[#1A0F0A] border border-[#2C1810] rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#2C1810]">
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3 w-12" />
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Item</th>
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Category</th>
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Price</th>
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Status</th>
-                <th className="text-left text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Featured</th>
-                <th className="text-right text-xs font-medium text-[#8B7355] uppercase tracking-wider px-4 py-3">Actions</th>
+              <tr className="border-b border-border">
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 w-12" />
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Item</th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Category</th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Price</th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Status</th>
+                <th className="text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Featured</th>
+                <th className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2C1810]">
+            <tbody className="divide-y divide-border">
               {filteredItems.map(item => (
-                <tr key={item.id} className="hover:bg-[#2C1810]/50 transition-colors">
+                <tr key={item.id} className="hover:bg-background/50 transition-colors">
                   <td className="px-4 py-3">
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-[#2C1810] flex items-center justify-center">
-                        <UtensilsCrossed size={14} className="text-[#5D4E3C]" />
+                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center">
+                        <UtensilsCrossed size={14} className="text-espresso" />
                       </div>
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-[#FAF7F2] text-sm font-medium">{item.name}</p>
-                    <p className="text-[#8B7355] text-xs truncate max-w-48">{item.description}</p>
+                    <p className="text-foreground text-sm font-medium">{item.name}</p>
+                    <p className="text-muted-foreground text-xs truncate max-w-48">{item.description}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge className="bg-[#2C1810] text-[#8B7355] border-[#3D2318] text-xs capitalize">{item.category}</Badge>
+                    <Badge className="bg-background text-muted-foreground border-border text-xs capitalize">{item.category}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[#D4A574] text-sm font-medium">{formatPrice(item.price)}</span>
+                    <span className="text-accent text-sm font-medium">{formatPrice(item.price)}</span>
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => toggleAvailable(item)} className="flex items-center gap-1.5 text-xs">
                       {item.available !== false ? (
                         <span className="flex items-center gap-1 text-green-400"><Eye size={12} /> Available</span>
                       ) : (
-                        <span className="flex items-center gap-1 text-[#8B7355]"><EyeOff size={12} /> Hidden</span>
+                        <span className="flex items-center gap-1 text-muted-foreground"><EyeOff size={12} /> Hidden</span>
                       )}
                     </button>
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => toggleFeatured(item)}>
-                      <Star size={15} className={item.featured ? 'fill-[#D4A574] text-[#D4A574]' : 'text-[#5D4E3C]'} />
+                      <Star size={15} className={item.featured ? 'fill-accent text-accent' : 'text-espresso'} />
                     </button>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => setEditing(item)} className="text-[#8B7355] hover:text-[#D4A574] p-1.5 rounded-lg hover:bg-[#2C1810] transition-colors">
+                      <button onClick={() => setEditing(item)} className="text-muted-foreground hover:text-accent p-1.5 rounded-lg hover:bg-background transition-colors">
                         <Edit2 size={13} />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id} className="text-[#8B7355] hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
+                      <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id} className="text-muted-foreground hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
                         {deleting === item.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
                       </button>
                     </div>
@@ -258,7 +263,7 @@ export default function MenuPage() {
               ))}
               {filteredItems.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-[#8B7355] text-sm">
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground text-sm">
                     No items found
                   </td>
                 </tr>
@@ -276,57 +281,57 @@ export default function MenuPage() {
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-[#1A0F0A] border-l border-[#2C1810] z-50 overflow-y-auto"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-background border-l border-border z-50 overflow-y-auto"
             >
-              <div className="sticky top-0 bg-[#1A0F0A] border-b border-[#2C1810] px-6 py-4 flex items-center justify-between z-10">
-                <h2 className="text-[#FAF7F2] font-serif text-lg">{'id' in editing && editing.id ? 'Edit Item' : 'Add Item'}</h2>
-                <button onClick={() => setEditing(null)} className="text-[#8B7355] hover:text-[#FAF7F2]"><X size={20} /></button>
+              <div className="sticky top-0 bg-background border-b border-border px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="text-foreground font-serif text-lg">{'id' in editing && editing.id ? 'Edit Item' : 'Add Item'}</h2>
+                <button onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground"><X size={20} /></button>
               </div>
 
               <div className="p-6 space-y-5">
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Item Image</Label>
+                  <Label className="text-foreground/80 text-sm">Item Image</Label>
                   <ImageUpload value={editing.image} onChange={url => updateField('image', url)} folder="menu" aspectRatio="wide" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 space-y-1.5">
-                    <Label className="text-[#FAF7F2]/80 text-sm">Name *</Label>
-                    <Input value={editing.name} onChange={e => updateField('name', e.target.value)} placeholder="Buttermilk Pancakes" className="bg-[#0F0908] border-[#3D2318] text-[#FAF7F2] focus:border-[#D4A574]" />
+                    <Label className="text-foreground/80 text-sm">Name *</Label>
+                    <Input value={editing.name} onChange={e => updateField('name', e.target.value)} placeholder="Buttermilk Pancakes" className="bg-card border-border text-foreground focus:border-accent" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[#FAF7F2]/80 text-sm">Price (₹) *</Label>
-                    <Input type="number" value={editing.price} onChange={e => updateField('price', Number(e.target.value))} placeholder="349" className="bg-[#0F0908] border-[#3D2318] text-[#FAF7F2] focus:border-[#D4A574]" />
+                    <Label className="text-foreground/80 text-sm">Price (₹) *</Label>
+                    <Input type="number" value={editing.price} onChange={e => updateField('price', Number(e.target.value))} placeholder="349" className="bg-card border-border text-foreground focus:border-accent" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[#FAF7F2]/80 text-sm">Category</Label>
+                    <Label className="text-foreground/80 text-sm">Category</Label>
                     <div className="relative">
                       <select
                         value={editing.category}
                         onChange={e => updateField('category', e.target.value)}
-                        className="w-full appearance-none text-sm px-3 py-2 bg-[#0F0908] border border-[#3D2318] rounded-lg text-[#FAF7F2] focus:outline-none focus:border-[#D4A574] capitalize"
+                        className="w-full appearance-none text-sm px-3 py-2 bg-card border border-border rounded-lg text-foreground focus:outline-none focus:border-accent capitalize"
                       >
                         {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
-                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B7355] pointer-events-none" />
+                      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Description</Label>
+                  <Label className="text-foreground/80 text-sm">Description</Label>
                   <textarea
                     value={editing.description}
                     onChange={e => updateField('description', e.target.value)}
                     placeholder="Describe the dish..."
                     rows={3}
-                    className="w-full text-sm px-3 py-2.5 bg-[#0F0908] border border-[#3D2318] rounded-lg text-[#FAF7F2] placeholder:text-[#5D4E3C] focus:outline-none focus:border-[#D4A574] resize-none"
+                    className="w-full text-sm px-3 py-2.5 bg-card border border-border rounded-lg text-foreground placeholder:text-espresso focus:outline-none focus:border-accent resize-none"
                   />
                 </div>
 
                 {/* Dietary Tags */}
                 <div className="space-y-2">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Dietary Tags</Label>
+                  <Label className="text-foreground/80 text-sm">Dietary Tags</Label>
                   <div className="flex flex-wrap gap-2">
                     {DIETARY.map(tag => (
                       <button
@@ -337,7 +342,7 @@ export default function MenuPage() {
                           'px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors border',
                           (editing.dietary || []).includes(tag)
                             ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                            : 'bg-[#0F0908] border-[#3D2318] text-[#8B7355] hover:border-[#5D4E3C]'
+                            : 'bg-card border-border text-muted-foreground hover:border-espresso'
                         )}
                       >
                         {tag}
@@ -348,8 +353,8 @@ export default function MenuPage() {
 
                 {/* Location assignment */}
                 <div className="space-y-2">
-                  <Label className="text-[#FAF7F2]/80 text-sm">Available At</Label>
-                  <p className="text-[#5D4E3C] text-xs">Leave empty to show at all locations</p>
+                  <Label className="text-foreground/80 text-sm">Available At</Label>
+                  <p className="text-espresso text-xs">Leave empty to show at all locations</p>
                   <div className="flex flex-wrap gap-2">
                     {locations.map(loc => (
                       <button
@@ -359,8 +364,8 @@ export default function MenuPage() {
                         className={cn(
                           'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border',
                           (editing.locationIds || []).includes(loc.id)
-                            ? 'bg-[#D4A574]/10 border-[#D4A574]/30 text-[#D4A574]'
-                            : 'bg-[#0F0908] border-[#3D2318] text-[#8B7355] hover:border-[#5D4E3C]'
+                            ? 'bg-accent/10 border-accent/30 text-accent'
+                            : 'bg-card border-border text-muted-foreground hover:border-espresso'
                         )}
                       >
                         {loc.shortName}
@@ -372,18 +377,18 @@ export default function MenuPage() {
                 {/* Toggles */}
                 <div className="flex gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editing.featured || false} onChange={e => updateField('featured', e.target.checked)} className="w-4 h-4 rounded border-[#3D2318] bg-[#0F0908] accent-[#D4A574]" />
-                    <span className="text-[#FAF7F2]/80 text-sm">Featured</span>
+                    <input type="checkbox" checked={editing.featured || false} onChange={e => updateField('featured', e.target.checked)} className="w-4 h-4 rounded border-border bg-card accent-accent" />
+                    <span className="text-foreground/80 text-sm">Featured</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={editing.available !== false} onChange={e => updateField('available', e.target.checked)} className="w-4 h-4 rounded border-[#3D2318] bg-[#0F0908] accent-[#D4A574]" />
-                    <span className="text-[#FAF7F2]/80 text-sm">Available</span>
+                    <input type="checkbox" checked={editing.available !== false} onChange={e => updateField('available', e.target.checked)} className="w-4 h-4 rounded border-border bg-card accent-accent" />
+                    <span className="text-foreground/80 text-sm">Available</span>
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#1A0F0A] py-4 -mx-6 px-6 border-t border-[#2C1810]">
-                  <Button onClick={() => setEditing(null)} variant="outline" className="flex-1 border-[#3D2318] text-[#8B7355] hover:text-[#FAF7F2] hover:bg-[#2C1810]">Cancel</Button>
-                  <Button onClick={handleSave} disabled={saving} className="flex-1 bg-[#D4A574] hover:bg-[#C4955A] text-[#2C1810] font-medium">
+                <div className="flex gap-3 pt-4 sticky bottom-0 bg-background py-4 -mx-6 px-6 border-t border-border">
+                  <Button onClick={() => setEditing(null)} variant="outline" className="flex-1 border-border text-muted-foreground hover:text-foreground hover:bg-card">Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving} className="flex-1 bg-accent hover:bg-caramel-hover text-accent-foreground font-medium">
                     {saving ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Save size={14} className="mr-1.5" />}
                     Save Item
                   </Button>

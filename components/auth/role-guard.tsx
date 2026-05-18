@@ -8,10 +8,18 @@ import { hasPermission, type Permission } from '@/lib/auth/roles'
 interface RoleGuardProps {
   permission: Permission
   children: React.ReactNode
+  /** Where to redirect if user lacks permission. Defaults to '/' (home). */
   redirectTo?: string
 }
 
-export function RoleGuard({ permission, children, redirectTo = '/admin' }: RoleGuardProps) {
+/**
+ * Protects admin sub-pages by permission.
+ * If the user lacks the required permission, they're redirected.
+ *
+ * BUG FIX: Default redirect was '/admin' — which caused infinite loops
+ * for customers who don't have dashboard access. Changed to '/'.
+ */
+export function RoleGuard({ permission, children, redirectTo = '/' }: RoleGuardProps) {
   const { role, loading, canAccessDashboard } = useAuth()
   const router = useRouter()
 
@@ -27,7 +35,7 @@ export function RoleGuard({ permission, children, redirectTo = '/admin' }: RoleG
   if (loading || !allowed) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-8 h-8 border-2 border-[#D4A574] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
