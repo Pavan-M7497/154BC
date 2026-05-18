@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+
+    function isStaff() {
+      return isAuthenticated()
+        && userDoc().exists
+        && userDoc().data.role in ['manager', 'admin'];
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isStaff()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

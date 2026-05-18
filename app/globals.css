@@ -1,0 +1,150 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Premium Café Palette */
+  --background: #FAF7F2;
+  --foreground: #2C1810;
+  --card: #FFFFFF;
+  --card-foreground: #2C1810;
+  --popover: #FFFFFF;
+  --popover-foreground: #2C1810;
+  --primary: #2C1810;
+  --primary-foreground: #FAF7F2;
+  --secondary: #E8DFD0;
+  --secondary-foreground: #2C1810;
+  --muted: #E8DFD0;
+  --muted-foreground: #8B7355;
+  --accent: #D4A574;
+  --accent-foreground: #2C1810;
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAFA;
+  --border: #D4C9B8;
+  --input: #D4C9B8;
+  --ring: #D4A574;
+  --chart-1: #D4A574;
+  --chart-2: #8B7355;
+  --chart-3: #5D4E3C;
+  --chart-4: #A69070;
+  --chart-5: #2C1810;
+  --radius: 0.5rem;
+  
+  /* Café-specific tokens */
+  --coffee: #2C1810;
+  --cream: #FAF7F2;
+  --caramel: #D4A574;
+  --mocha: #8B7355;
+  --espresso: #5D4E3C;
+  --latte: #A69070;
+  --oat-milk: #E8DFD0;
+  --foam: #D4C9B8;
+  
+  /* Sidebar tokens */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #2C1810;
+  --sidebar-primary: #2C1810;
+  --sidebar-primary-foreground: #FAF7F2;
+  --sidebar-accent: #F5F0E8;
+  --sidebar-accent-foreground: #2C1810;
+  --sidebar-border: #D4C9B8;
+  --sidebar-ring: #D4A574;
+
+  /* Brand colors for delivery apps */
+  --swiggy: #FC8019;
+  --zomato: #E23744;
+  --whatsapp: #25D366;
+}
+
+.dark {
+  --background: #1A0F0A;
+  --foreground: #FAF7F2;
+  --card: #2C1810;
+  --card-foreground: #FAF7F2;
+  --popover: #2C1810;
+  --popover-foreground: #FAF7F2;
+  --primary: #D4A574;
+  --primary-foreground: #2C1810;
+  --secondary: #3D2318;
+  --secondary-foreground: #FAF7F2;
+  --muted: #3D2318;
+  --muted-foreground: #A69070;
+  --accent: #D4A574;
+  --accent-foreground: #2C1810;
+  --destructive: #DC2626;
+  --destructive-foreground: #FAFAFA;
+  --border: #3D2318;
+  --input: #3D2318;
+  --ring: #D4A574;
+  --sidebar: #2C1810;
+  --sidebar-foreground: #FAF7F2;
+  --sidebar-primary: #D4A574;
+  --sidebar-primary-foreground: #2C1810;
+  --sidebar-accent: #3D2318;
+  --sidebar-accent-foreground: #FAF7F2;
+  --sidebar-border: #3D2318;
+  --sidebar-ring: #D4A574;
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), 'Playfair Display', ui-serif, Georgia, serif;
+  --font-mono: 'GeistMono', monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Café color tokens */
+  --color-coffee: var(--coffee);
+  --color-cream: var(--cream);
+  --color-caramel: var(--caramel);
+  --color-mocha: var(--mocha);
+  --color-espresso: var(--espresso);
+  --color-latte: var(--latte);
+  --color-oat-milk: var(--oat-milk);
+  --color-foam: var(--foam);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

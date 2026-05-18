@@ -1,0 +1,150 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// users/{uid} — name, email, role (customer|manager|admin), optional profile fields
+// locations, menuItems, reviews, gallery — public café content
+// settings/{homepage|general} — site CMS
+// reservations/{id} — table bookings (authenticated users)
+// contactMessages/{id} — inbound contact form (staff read, public create)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userExists() {
+      return isAuthenticated() && userDoc().exists;
+    }
+
+    function userRole() {
+      return userDoc().data.role;
+    }
+
+    function isStaff() {
+      return userExists() && userRole() in ['manager', 'admin'];
+    }
+
+    function isAdmin() {
+      return userExists() && userRole() == 'admin';
+    }
+
+    function isValidRole(role) {
+      return role in ['customer', 'manager', 'admin'];
+    }
+
+    function isValidUserCreate() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt'])
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.role == 'customer'
+        && (!('favoriteItems' in data) || data.favoriteItems is list)
+        && (!('loyaltyPoints' in data) || data.loyaltyPoints is number)
+        && (!('phone' in data) || data.phone is string);
+    }
+
+    function isValidUserSelfUpdate() {
+      let data = request.resource.data;
+      let prev = resource.data;
+      return data.role == prev.role
+        && data.email == prev.email
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && isValidRole(data.role)
+        && (!('favoriteItems' in data) || data.favoriteItems is list)
+        && (!('loyaltyPoints' in data) || data.loyaltyPoints is number)
+        && (!('phone' in data) || data.phone is string);
+    }
+
+    function isValidUserAdminUpdate() {
+      let data = request.resource.data;
+      return isValidRole(data.role)
+        && data.name is string && data.name.size() >= 1
+        && data.email is string && data.email.size() >= 3;
+    }
+
+    function isValidReservationCreate() {
+      let data = request.resource.data;
+      return isAuthenticated()
+        && data.userId == request.auth.uid
+        && data.locationId is string
+        && data.date is string
+        && data.keys().hasAll(['userId', 'locationId', 'date', 'createdAt']);
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isStaff();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUserCreate();
+      allow update: if (isOwner(userId) && isValidUserSelfUpdate())
+        || (isAdmin() && isValidUserAdminUpdate());
+      allow delete: if isAdmin();
+    }
+
+    match /locations/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /menuItems/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isStaff();
+    }
+
+    match /reviews/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isStaff();
+    }
+
+    match /gallery/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isStaff();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow create, update: if (docId == 'homepage' && isStaff())
+        || (docId == 'general' && isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /reservations/{reservationId} {
+      allow read: if isStaff()
+        || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isValidReservationCreate();
+      allow update: if isStaff()
+        || (isAuthenticated()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.status == 'cancelled');
+      allow delete: if isAdmin();
+    }
+
+    match /contactMessages/{messageId} {
+      allow read: if isStaff();
+      allow create: if request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.message is string;
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
