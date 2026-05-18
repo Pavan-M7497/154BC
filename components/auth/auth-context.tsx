@@ -57,10 +57,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // No profile yet. If displayName is empty the user is mid-signup —
+    // let signUp/signInWithGoogle create the doc with the real name.
+    if (!firebaseUser.displayName) return
+
     const created = await ensureUserProfile(
       firebaseUser.uid,
       firebaseUser.email || '',
-      firebaseUser.displayName || ''
+      firebaseUser.displayName
     )
     setUserProfile(created)
   }
@@ -103,17 +107,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, name: string) => {
     const result = await createUserWithEmailAndPassword(auth, email, password)
     await updateProfile(result.user, { displayName: name })
-    await ensureUserProfile(result.user.uid, email, name)
+    const profile = await ensureUserProfile(result.user.uid, email, name)
+    setUserProfile(profile)
   }
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider()
     const result = await signInWithPopup(auth, provider)
-    await ensureUserProfile(
+    const fallbackName =
+      result.user.displayName || result.user.email?.split('@')[0] || 'New user'
+    const profile = await ensureUserProfile(
       result.user.uid,
       result.user.email || '',
-      result.user.displayName || ''
+      fallbackName
     )
+    setUserProfile(profile)
   }
 
   const signOut = async () => {
@@ -160,3 +168,4 @@ export function useAuth() {
   }
   return context
 }
+

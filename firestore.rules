@@ -28,7 +28,7 @@ service cloud.firestore {
     }
 
     function userExists() {
-      return isAuthenticated() && userDoc().exists;
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
     function userRole() {

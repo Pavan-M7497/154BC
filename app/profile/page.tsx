@@ -41,7 +41,7 @@ type Tab = 'profile' | 'reservations' | 'favorites'
 
 function ProfileContent() {
   const router = useRouter()
-  const { user, userProfile, loading, canAccessDashboard } = useAuth()
+  const { user, userProfile, loading } = useAuth()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loadingReservations, setLoadingReservations] = useState(true)
@@ -50,12 +50,8 @@ function ProfileContent() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/')
-      return
     }
-    if (!loading && user && canAccessDashboard) {
-      router.replace('/admin')
-    }
-  }, [user, loading, canAccessDashboard, router])
+  }, [user, loading, router])
 
   // Fetch reservations
   useEffect(() => {

@@ -55,18 +55,6 @@ export function Hero() {
 
         {/* Content */}
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-cream/10 backdrop-blur-sm border border-cream/20 rounded-full px-4 py-2 mb-8"
-          >
-            <span className="text-cream/90 text-sm tracking-wide">Est. 2019</span>
-            <span className="w-1 h-1 rounded-full bg-caramel" />
-            <span className="text-cream/90 text-sm tracking-wide">Bangalore&apos;s Finest</span>
-          </motion.div>
-
           {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -165,3 +153,4 @@ export function Hero() {
     </>
   )
 }
+
