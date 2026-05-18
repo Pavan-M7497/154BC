@@ -119,13 +119,15 @@ export default function LocationsPage() {
     setEditing(prev => prev ? { ...prev, [field]: value } : null)
   }
 
-  const updateNestedField = (parent: string, field: string, value: string) => {
+  const updateNestedField = (parent: string, field: string, value: unknown) => {
     setEditing(prev => {
       if (!prev) return null
+      const parentObj = prev[parent as keyof typeof prev]
+      if (typeof parentObj !== 'object' || parentObj === null) return prev
       return {
         ...prev,
-        [parent]: { ...(prev as Record<string, Record<string, string>>)[parent], [field]: value }
-      }
+        [parent]: { ...parentObj, [field]: value }
+      } as typeof prev
     })
   }
 

@@ -22,6 +22,8 @@ export interface Location {
   active?: boolean
   description?: string
   galleryImages?: string[]
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface MenuItem {
@@ -35,6 +37,8 @@ export interface MenuItem {
   available?: boolean
   dietary?: ('vegetarian' | 'vegan' | 'gluten-free')[]
   locationIds?: string[] // empty = all locations
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface Review {
@@ -48,6 +52,8 @@ export interface Review {
   avatar?: string
   featured?: boolean
   hidden?: boolean
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface GalleryImage {
@@ -56,6 +62,8 @@ export interface GalleryImage {
   alt: string
   locationId: string
   order?: number
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface HomepageContent {
@@ -65,6 +73,14 @@ export interface HomepageContent {
   announcement?: string
   announcementActive?: boolean
   featuredItemIds?: string[]
+  brandStoryTitle?: string
+  brandStoryDescription?: string
+  brandStoryImage?: string
+  ctaText?: string
+  ctaDescription?: string
+  createdAt?: Date
+  updatedAt?: Date
+  [key: string]: unknown
 }
 
 // Format price in INR

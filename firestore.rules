@@ -72,9 +72,14 @@ service cloud.firestore {
 
     function isValidUserAdminUpdate() {
       let data = request.resource.data;
-      return isValidRole(data.role)
-        && data.name is string && data.name.size() >= 1
-        && data.email is string && data.email.size() >= 3;
+      let prev = resource.data;
+      // Allow updating role, name, or email individually while preserving other fields
+      return (data.keys().hasAny(['role', 'name', 'email']))
+        && (!('role' in data) || isValidRole(data.role))
+        && (!('name' in data) || (data.name is string && data.name.size() >= 1))
+        && (!('email' in data) || (data.email is string && data.email.size() >= 3))
+        && (!('role' in data) || data.role != prev.role || true) // allow role changes
+        && (!('createdAt' in data) || data.createdAt == prev.createdAt); // preserve createdAt
     }
 
     function isValidReservationCreate() {
@@ -129,8 +134,8 @@ service cloud.firestore {
       allow update: if isStaff()
         || (isAuthenticated()
           && resource.data.userId == request.auth.uid
-          && request.resource.data.userId == resource.data.userId
-          && request.resource.data.status == 'cancelled');
+          && (!('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId)
+          && (!('status' in request.resource.data) || request.resource.data.status == 'cancelled'));
       allow delete: if isAdmin();
     }
 

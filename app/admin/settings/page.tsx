@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<Record<string, unknown>>({
     siteTitle: 'Premium Coffee Shop',
     siteDescription: 'Experience the finest coffee and pastries',
     contactEmail: 'contact@coffeeshop.com',
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">Site Title</label>
               <Input
                 name="siteTitle"
-                value={settings.siteTitle}
+                value={typeof settings.siteTitle === 'string' ? settings.siteTitle : ''}
                 onChange={handleChange}
                 placeholder="Site title"
               />
@@ -110,7 +110,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">Site Description</label>
               <Input
                 name="siteDescription"
-                value={settings.siteDescription}
+                value={typeof settings.siteDescription === 'string' ? settings.siteDescription : ''}
                 onChange={handleChange}
                 placeholder="Site description"
               />
@@ -127,7 +127,7 @@ export default function SettingsPage() {
               <Input
                 name="contactEmail"
                 type="email"
-                value={settings.contactEmail}
+                value={typeof settings.contactEmail === 'string' ? settings.contactEmail : ''}
                 onChange={handleChange}
                 placeholder="contact@example.com"
               />
@@ -136,7 +136,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">WhatsApp Number</label>
               <Input
                 name="whatsappNumber"
-                value={settings.whatsappNumber}
+                value={typeof settings.whatsappNumber === 'string' ? settings.whatsappNumber : ''}
                 onChange={handleChange}
                 placeholder="+1234567890"
               />
@@ -145,7 +145,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium mb-2">Main Phone Number</label>
               <Input
                 name="mainPhoneNumber"
-                value={settings.mainPhoneNumber}
+                value={typeof settings.mainPhoneNumber === 'string' ? settings.mainPhoneNumber : ''}
                 onChange={handleChange}
                 placeholder="+1234567890"
               />

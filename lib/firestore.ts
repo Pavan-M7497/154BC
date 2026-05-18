@@ -5,7 +5,6 @@ import {
   getDoc,
   setDoc,
   addDoc,
-  updateDoc,
   deleteDoc,
   onSnapshot,
   query,
@@ -24,6 +23,13 @@ import {
 } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase'
 import type { Location, MenuItem, Review, GalleryImage, HomepageContent } from '@/lib/data'
+import {
+  parseLocation,
+  parseMenuItem,
+  parseReview,
+  parseGalleryImage,
+  parseHomepageContent,
+} from '@/lib/firestore-parsers'
 
 export type { FirestoreError }
 
@@ -58,7 +64,7 @@ export function subscribeLocations(
   return subscribeQuery(
     'locations',
     q,
-    (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Location),
+    (snap) => snap.docs.map((d) => parseLocation(d.id, d.data())),
     callback,
     onError
   )
@@ -66,7 +72,7 @@ export function subscribeLocations(
 
 export async function getLocations(): Promise<Location[]> {
   const snap = await getDocs(query(collection(db, 'locations'), orderBy('name')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Location)
+  return snap.docs.map((d) => parseLocation(d.id, d.data()))
 }
 
 export async function saveLocation(location: Omit<Location, 'id'> & { id?: string }): Promise<string> {
@@ -97,7 +103,7 @@ export function subscribeMenuItems(
   return subscribeQuery(
     'menuItems',
     q,
-    (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }) as MenuItem),
+    (snap) => snap.docs.map((d) => parseMenuItem(d.id, d.data())),
     callback,
     onError
   )
@@ -105,7 +111,7 @@ export function subscribeMenuItems(
 
 export async function getMenuItems(): Promise<MenuItem[]> {
   const snap = await getDocs(query(collection(db, 'menuItems'), orderBy('category')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as MenuItem)
+  return snap.docs.map((d) => parseMenuItem(d.id, d.data()))
 }
 
 export async function saveMenuItem(item: Omit<MenuItem, 'id'> & { id?: string }): Promise<string> {
@@ -136,7 +142,7 @@ export function subscribeReviews(
   return subscribeQuery(
     'reviews',
     q,
-    (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Review),
+    (snap) => snap.docs.map((d) => parseReview(d.id, d.data())),
     callback,
     onError
   )
@@ -144,7 +150,7 @@ export function subscribeReviews(
 
 export async function getReviews(): Promise<Review[]> {
   const snap = await getDocs(query(collection(db, 'reviews'), orderBy('createdAt', 'desc')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Review)
+  return snap.docs.map((d) => parseReview(d.id, d.data()))
 }
 
 export async function saveReview(review: Omit<Review, 'id'> & { id?: string }): Promise<string> {
@@ -171,10 +177,10 @@ export async function deleteReview(id: string): Promise<void> {
 
 // ─── Homepage CMS ───────────────────────────────────────────────────────────
 
-export async function getHomepageCMS(): Promise<Record<string, unknown>> {
+export async function getHomepageCMS(): Promise<HomepageContent> {
   try {
     const snap = await getDoc(doc(db, 'settings', 'homepage'))
-    return snap.data() || {}
+    return snap.data() ? parseHomepageContent(snap.data()!) : {}
   } catch (error) {
     console.error('Error getting homepage CMS:', error)
     return {}
@@ -217,7 +223,7 @@ export function subscribeGallery(
   return subscribeQuery(
     'gallery',
     q,
-    (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GalleryImage),
+    (snap) => snap.docs.map((d) => parseGalleryImage(d.id, d.data())),
     callback,
     onError
   )
@@ -225,7 +231,7 @@ export function subscribeGallery(
 
 export async function getGallery(): Promise<GalleryImage[]> {
   const snap = await getDocs(query(collection(db, 'gallery'), orderBy('order')))
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GalleryImage)
+  return snap.docs.map((d) => parseGalleryImage(d.id, d.data()))
 }
 
 export async function saveGalleryImage(
@@ -264,7 +270,10 @@ export function subscribeHomepageContent(
 ): Unsubscribe {
   return onSnapshot(
     doc(db, 'settings', 'homepage'),
-    (snap) => callback((snap.data() as HomepageContent) || {}),
+    (snap) => {
+      const data = snap.data()
+      callback(data ? parseHomepageContent(data) : {})
+    },
     (error) => {
       logSubscriptionError('settings/homepage', error)
       onError?.(error)

@@ -24,28 +24,51 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   // Subscribe to Firestore locations (active only)
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null
+    
     try {
       const q = query(
         collection(db, 'locations'),
         where('active', '==', true),
         orderBy('name')
       )
-      const unsub = onSnapshot(
+      unsubscribe = onSnapshot(
         q,
         (snap) => {
-          if (!snap.empty) {
-            const firestoreLocations = snap.docs.map(d => ({ id: d.id, ...d.data() } as Location))
-            setDynamicLocations(firestoreLocations)
+          try {
+            if (!snap.empty) {
+              const firestoreLocations = snap.docs.map(d => {
+                try {
+                  return { id: d.id, ...d.data() } as Location
+                } catch (e) {
+                  console.error('Error parsing location:', e)
+                  return null
+                }
+              }).filter((loc): loc is Location => loc !== null)
+              
+              if (firestoreLocations.length > 0) {
+                setDynamicLocations(firestoreLocations)
+              }
+            }
+          } catch (e) {
+            console.error('Error processing Firestore snapshot:', e)
+            setDynamicLocations(staticLocations)
           }
         },
-        () => {
-          // Fallback to static data if Firestore fails
+        (error) => {
+          console.error('Firestore locations subscription error:', error)
           setDynamicLocations(staticLocations)
         }
       )
-      return () => unsub()
-    } catch {
+    } catch (e) {
+      console.error('Error setting up Firestore subscription:', e)
       setDynamicLocations(staticLocations)
+    }
+    
+    return () => {
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe()
+      }
     }
   }, [])
 

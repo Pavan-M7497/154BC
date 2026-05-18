@@ -11,13 +11,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { AlertCircle, Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateHomepageCMS, getHomepageCMS } from '@/lib/firestore'
+import type { HomepageContent } from '@/lib/data'
 
 export default function HomepageCMSPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [cms, setCms] = useState({
+  const [cms, setCms] = useState<HomepageContent>({
     heroTitle: '',
     heroSubtitle: '',
     brandStoryTitle: '',

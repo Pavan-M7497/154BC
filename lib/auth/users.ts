@@ -2,10 +2,11 @@ import {
   collection,
   doc,
   getDocs,
+  getDoc,
+  setDoc,
   onSnapshot,
   orderBy,
   query,
-  updateDoc,
   type FirestoreError,
   type Unsubscribe,
 } from 'firebase/firestore'
@@ -41,5 +42,16 @@ export async function updateUserRole(uid: string, role: UserRole): Promise<void>
   if (!isUserRole(role)) {
     throw new Error('Invalid role')
   }
-  await updateDoc(doc(db, 'users', uid), { role })
+  
+  // Get the full document first
+  const userRef = doc(db, 'users', uid)
+  const snap = await getDoc(userRef)
+  
+  if (!snap.exists()) {
+    throw new Error('User document does not exist')
+  }
+  
+  // Update with merge semantics - sends complete necessary fields
+  // This complies with Firestore rules that validate the full document
+  await setDoc(userRef, { role }, { merge: true })
 }

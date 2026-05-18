@@ -85,7 +85,7 @@ export function FeaturedMenu() {
                   {/* Dietary Tags */}
                   {item.dietary && item.dietary.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {item.dietary.map(tag => (
+                      {item.dietary.map((tag: string) => (
                         <span
                           key={tag}
                           className="text-xs text-latte bg-oat-milk px-2 py-1 rounded-full capitalize"
