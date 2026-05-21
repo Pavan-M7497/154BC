@@ -7,11 +7,15 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { WhatsAppButton } from '@/components/whatsapp-button'
 
+import { SettingsProvider } from '@/components/settings-context'
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <LocationProvider>
-        <AppShellInner>{children}</AppShellInner>
+        <SettingsProvider>
+          <AppShellInner>{children}</AppShellInner>
+        </SettingsProvider>
       </LocationProvider>
     </AuthProvider>
   )

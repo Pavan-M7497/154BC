@@ -17,8 +17,12 @@ import {
   ExternalLink,
   Send,
   CheckCircle,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import { toast } from 'sonner'
 
 export default function ContactPage() {
   const { selectedLocation, setSelectedLocation } = useLocation()
@@ -28,16 +32,34 @@ export default function ContactPage() {
     message: ''
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReservationOpen, setIsReservationOpen] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Simulate form submission
-    setIsSubmitted(true)
-    setTimeout(() => {
-      setIsSubmitted(false)
+    setIsSubmitting(true)
+    try {
+      await addDoc(collection(db, 'contactMessages'), {
+        name: formState.name,
+        email: formState.email,
+        message: formState.message,
+        subject: 'General Inquiry',
+        locationId: selectedLocation?.id || 'general',
+        createdAt: serverTimestamp(),
+        status: 'unread'
+      })
+      setIsSubmitted(true)
       setFormState({ name: '', email: '', message: '' })
-    }, 3000)
+      toast.success('Your message has been sent successfully!')
+      setTimeout(() => {
+        setIsSubmitted(false)
+      }, 5000)
+    } catch (error) {
+      console.error('Error writing contact message:', error)
+      toast.error('Failed to send message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -367,10 +389,20 @@ export default function ContactPage() {
 
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-coffee text-cream py-4 rounded-lg font-medium hover:bg-espresso transition-colors"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-coffee text-cream py-4 rounded-lg font-medium hover:bg-espresso transition-colors disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4" />
-                    Send Message
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Send Message</span>
+                      </>
+                    )}
                   </button>
                 </div>
               )}

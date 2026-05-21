@@ -3,10 +3,17 @@
 import Link from 'next/link'
 import { Instagram, Facebook, Mail } from 'lucide-react'
 import { useLocation } from '@/components/location-context'
+import { useSettings } from '@/components/settings-context'
 
 export function Footer() {
   const { selectedLocation } = useLocation()
+  const { settings } = useSettings()
   const currentYear = new Date().getFullYear()
+
+  // Format the logo dynamically
+  const nameParts = (settings.cafeName || '154').split(' ')
+  const logoFirstWord = nameParts[0]
+  const logoRest = nameParts.slice(1).join(' ')
 
   return (
     <footer className="bg-coffee text-cream/90">
@@ -15,12 +22,13 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link href="/" className="inline-block mb-4">
-              <span className="font-serif text-3xl text-cream">154</span>
-              <span className="block text-caramel text-sm tracking-wide">Breakfast Club</span>
+              <span className="font-serif text-3xl text-cream">{logoFirstWord}</span>
+              {logoRest && (
+                <span className="block text-caramel text-sm tracking-wide">{logoRest}</span>
+              )}
             </Link>
             <p className="text-cream/70 text-sm leading-relaxed max-w-xs">
-              Crafting unforgettable brunch experiences in Bangalore since 2019. Premium coffee, 
-              artisan food, and warm hospitality.
+              {settings.brandDescription}
             </p>
           </div>
 
@@ -75,39 +83,50 @@ export function Footer() {
           <div>
             <h4 className="font-medium text-cream mb-4">Connect</h4>
             <div className="flex gap-4 mb-4">
-              <a
-                href="https://instagram.com/154breakfastclub"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://facebook.com/154breakfastclub"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="mailto:hello@154breakfastclub.in"
-                className="w-10 h-10 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
-              >
-                <Mail className="w-5 h-5" />
-              </a>
+              {settings.instagramUrl && (
+                <a
+                  href={settings.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-11 h-11 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+              {settings.facebookUrl && (
+                <a
+                  href={settings.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-11 h-11 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+              {settings.contactEmail && (
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="w-11 h-11 rounded-full bg-cream/10 flex items-center justify-center hover:bg-caramel transition-colors"
+                  aria-label="Email"
+                >
+                  <Mail className="w-5 h-5" />
+                </a>
+              )}
             </div>
-            <p className="text-cream/70 text-sm">
-              hello@154breakfastclub.in
-            </p>
+            {settings.contactEmail && (
+              <p className="text-cream/70 text-sm">
+                {settings.contactEmail}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-cream/10 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-cream/50 text-sm">
-            &copy; {currentYear} 154 Breakfast Club. All rights reserved.
+            &copy; {currentYear} {settings.cafeName}. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link href="#" className="text-cream/50 hover:text-cream/70 text-sm transition-colors">

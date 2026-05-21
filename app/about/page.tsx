@@ -7,6 +7,7 @@ import { LocationSelector } from '@/components/location-selector'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { Testimonials } from '@/components/sections/testimonials'
 import { Heart, Coffee, Users, Leaf } from 'lucide-react'
+import { useSettings } from '@/components/settings-context'
 
 const values = [
   {
@@ -53,12 +54,17 @@ const team = [
 ]
 
 export default function AboutPage() {
+  const { settings } = useSettings()
   const parallaxRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: parallaxRef,
     offset: ['start end', 'end start']
   })
   const imageY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%'])
+
+  const brandName = settings.cafeName || '154 Breakfast Club'
+  const nameParts = brandName.split(' ')
+  const logoFirstWord = nameParts[0]
 
   return (
     <>
@@ -79,7 +85,7 @@ export default function AboutPage() {
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-mocha text-lg max-w-2xl mx-auto leading-relaxed">
-              154 Breakfast Club was founded on the belief that mornings deserve to be extraordinary. 
+              {brandName} was founded on the belief that mornings deserve to be extraordinary. 
               We are a team of passionate food lovers, coffee enthusiasts, and hospitality artists based in Bangalore.
             </p>
           </ScrollReveal>
@@ -188,7 +194,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal className="text-center mb-16">
             <span className="text-caramel text-sm font-medium tracking-[0.2em] uppercase">
-              The Faces Behind 154
+              The Faces Behind {brandName}
             </span>
             <h2 className="font-serif text-4xl md:text-5xl text-coffee mt-4 mb-6">
               Meet Our Team
@@ -235,12 +241,12 @@ export default function AboutPage() {
         <div className="max-w-3xl mx-auto px-6">
           <ScrollReveal>
             <h2 className="font-serif text-4xl md:text-5xl mb-6">
-              Come Experience <span className="text-caramel">154</span>
+              Come Experience <span className="text-caramel">{logoFirstWord}</span>
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <p className="text-cream/70 text-lg mb-8 leading-relaxed">
-              We would love to welcome you to our table. Visit any of our three locations in Bangalore and 
+              We would love to welcome you to our table. Visit any of our premier locations and 
               discover why our guests keep coming back.
             </p>
           </ScrollReveal>

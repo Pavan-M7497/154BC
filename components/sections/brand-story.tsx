@@ -7,7 +7,10 @@ import { useRef, useState, useEffect } from 'react'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { getHomepageCMS } from '@/lib/firestore'
 
+import { useSettings } from '@/components/settings-context'
+
 export function BrandStory() {
+  const { settings } = useSettings()
   const sectionRef = useRef<HTMLElement>(null)
   const [cmsData, setCmsData] = useState({
     brandStoryTitle: 'Where Every Cup Tells a Story',
@@ -80,7 +83,7 @@ export function BrandStory() {
             
             <ScrollReveal delay={0.2}>
               <p className="text-mocha text-lg leading-relaxed mb-6">
-                154 Breakfast Club was born from a simple belief: that the morning ritual 
+                {settings.cafeName} was born from a simple belief: that the morning ritual 
                 deserves to be extraordinary. Founded in the heart of Bangalore, we set out to 
                 create spaces where time slows down and every detail matters.
               </p>

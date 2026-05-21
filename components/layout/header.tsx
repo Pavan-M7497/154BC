@@ -10,6 +10,7 @@ import { LoginModal } from '@/components/auth/login-modal'
 import { UserMenu } from '@/components/auth/user-menu'
 import { ReservationModal } from '@/components/reservation-modal'
 import { Menu, X, MapPin, ChevronDown, Calendar } from 'lucide-react'
+import { useSettings } from '@/components/settings-context'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -25,6 +26,7 @@ export function Header() {
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false)
   const { selectedLocation, openLocationModal } = useLocation()
   const { user, loading } = useAuth()
+  const { settings } = useSettings()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +37,11 @@ export function Header() {
   }, [])
 
   const isOpen = selectedLocation ? isOpenNow(selectedLocation) : false
+
+  // Dynamic logo parts formatting
+  const nameParts = (settings.cafeName || '154').split(' ')
+  const logoFirstWord = nameParts[0]
+  const logoRest = nameParts.slice(1).join(' ')
 
   return (
     <>
@@ -48,10 +55,12 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <span className="font-serif text-2xl text-coffee">154</span>
-            <span className="hidden sm:inline text-mocha text-sm tracking-wide">
-              Breakfast Club
-            </span>
+            <span className="font-serif text-2xl text-coffee">{logoFirstWord}</span>
+            {logoRest && (
+              <span className="hidden sm:inline text-mocha text-sm tracking-wide">
+                {logoRest}
+              </span>
+            )}
           </Link>
 
           {/* Desktop Navigation */}

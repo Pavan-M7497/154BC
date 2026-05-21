@@ -2,13 +2,16 @@
 
 import { motion } from 'framer-motion'
 import { useLocation } from '@/components/location-context'
+import { useSettings } from '@/components/settings-context'
 import { MessageCircle } from 'lucide-react'
 
 export function WhatsAppButton() {
   const { selectedLocation } = useLocation()
+  const { settings } = useSettings()
   
-  const whatsappNumber = selectedLocation?.whatsapp || '+918045670154'
-  const message = encodeURIComponent(`Hi! I'd like to know more about 154 Breakfast Club${selectedLocation ? ` - ${selectedLocation.shortName}` : ''}.`)
+  const whatsappNumber = selectedLocation?.whatsapp || settings.whatsappNumber || '+918045670154'
+  const brandName = settings.cafeName || '154 Breakfast Club'
+  const message = encodeURIComponent(`Hi! I'd like to know more about ${brandName}${selectedLocation ? ` - ${selectedLocation.shortName}` : ''}.`)
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${message}`
 
   return (
